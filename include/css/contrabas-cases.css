@@ -368,7 +368,11 @@
   .cc-choose { grid-template-columns: 1fr; }
   .cc-form .cc-grid { grid-template-columns: 1fr; }
   .cc-field--half { grid-column: 1 / -1; }
-  .cc-modal__box { margin: 0; width: 100%; min-height: 100%; max-height: 100%; border-radius: 0; }
+  /* .cc-modal саме position:fixed + inset:0, тобто вже точно = висота вʼюпорта.
+     height:100% на дитині від цього фіксованого контейнера — надійніше за vh/dvh,
+     не «стрибає» при згортанні адресного рядка, і разом з overflow-y:auto (базове
+     правило) дає працюючий внутрішній скрол, коли контент не влазить. */
+  .cc-modal__box { margin: 0; width: 100%; height: 100%; max-height: 100%; border-radius: 0; }
   .cc-litem__actions { flex-direction: column; }
   /* Кейс-модалка на телефоні — саме ВІКНО (модалка), а не сторінка: з відступами
      від країв, заокругленням і власним внутрішнім скролом. × зафіксований у кутку. */
@@ -391,7 +395,7 @@
   .cc-vmodal__x:hover, .cc-vmodal__x:active { background: #e0201f; }
   .cc-reels-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .cc-ov__title { font-size: 16px; }
-  /* Адмін-модалка на телефоні теж на весь екран, без «плаваючих» країв. */
+  /* Адмін-модалка на телефоні теж на весь екран, без «плаваючих» країв
+     (висота та скрол уже задані вище, тут лише display). */
   .cc-modal.is-open { display: block; }
-  .cc-modal__box { margin: 0; width: 100%; min-height: 100vh; min-height: 100dvh; max-height: none; border-radius: 0; }
 }
