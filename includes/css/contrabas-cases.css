@@ -1,0 +1,391 @@
+/* ============================================================
+   Contrabas — кейси + модалки (dark / premium).
+   Інтегровано з темою редизайну (contrabas-redesign.css).
+   Секція «SELECTED PROJECTS»: eyebrow + заголовок + фільтри + сітка.
+   ============================================================ */
+
+.cc-section { background: transparent; color: #f2f2f2;
+  font-family: 'Inter', Arial, sans-serif; }
+.cc-wrap { max-width: 1280px; margin: 0 auto; }
+
+/* ---------- Шапка секції ----------
+   Верхній рядок: заголовок ліворуч + «Керувати кейсами» праворуч.
+   Нижній рядок: категорії (фільтри) ліворуч + «Всі кейси» праворуч. */
+.cc-head { margin-bottom: 40px; }
+.cc-head__top { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 22px; }
+.cc-head__l .cx-eyebrow { margin-bottom: 16px; }
+.cc-head h2 { margin: 0; font-family: 'Archivo', sans-serif; font-size: clamp(20px, 1.8vw, 26px); line-height: 1.1;
+  letter-spacing: -0.01em; text-transform: uppercase; color: #fff; font-weight: 900; }
+.cc-head__bar { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.cc-head__bar .cx-viewall { margin-left: auto; }
+
+.cc-manage-link { background: none; border: 0; cursor: pointer; font-family: inherit;
+  font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #cfcfcf;
+  transition: color .25s; white-space: nowrap; padding: 0; }
+.cc-manage-link:hover { color: #fff; }
+
+/* ---------- Кнопка (у модалках) ---------- */
+.cc-btn { display: inline-flex; align-items: center; gap: 8px; background: #e0201f; color: #fff; border: none; cursor: pointer;
+  padding: 13px 26px; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; border-radius: 2px;
+  transition: background .25s, transform .15s; font-family: inherit; font-weight: 700; }
+.cc-btn:hover { background: #ff3b3b; }
+.cc-btn:active { transform: translateY(1px); }
+.cc-btn:disabled { opacity: .5; cursor: default; }
+.cc-btn--danger { background: transparent; border: 1px solid #7a2020; color: #ff7a7a; }
+.cc-btn--danger:hover { background: #7a2020; color: #fff; }
+
+/* ---------- Фільтри ---------- */
+.cc-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.cc-filter { background: transparent; border: 0; color: #8a8a8a; padding: 8px 14px; font-size: 12px;
+  letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border-radius: 2px; position: relative;
+  transition: color .2s; font-family: inherit; font-weight: 600; }
+.cc-filter::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 2px; height: 2px;
+  background: #e0201f; transform: scaleX(0); transform-origin: left; transition: transform .3s; }
+.cc-filter:hover { color: #fff; }
+.cc-filter.cc-active { color: #fff; }
+.cc-filter.cc-active::after { transform: scaleX(1); }
+
+/* ---------- Сітка (портретні плитки, як у референсі) ---------- */
+.cc-cases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px 22px; }
+
+/* Домашня сторінка (data-limit на #cc-root): картки в один ряд, без переносу —
+   якщо їх більше, ніж влазить, ряд стає горизонтально прокручуваним. */
+.cc-wrap--scroll .cc-cases {
+  display: flex; gap: 22px; overflow-x: auto; overflow-y: hidden;
+  padding-bottom: 6px; cursor: grab; user-select: none;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; -ms-overflow-style: none;
+  mask-image: linear-gradient(90deg, #000 0%, #000 96%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 96%, transparent 100%);
+}
+.cc-wrap--scroll .cc-cases.is-dragging { cursor: grabbing; }
+.cc-wrap--scroll .cc-cases img { -webkit-user-drag: none; }
+.cc-wrap--scroll .cc-cases::-webkit-scrollbar { display: none; }
+.cc-wrap--scroll .cc-card { flex: 0 0 auto; width: 278px; }
+.cc-wrap--scroll .cc-empty { flex: 1 1 auto; }
+
+/* Восьма «картка» в кінці ряду — веде на сторінку з повним портфоліо.
+   Структура (thumb + foot) така сама, як у звичайних карток, щоб виглядало
+   в єдиному стилі — просто замість фото в thumb іконка-стрілка. */
+.cc-card--more { display: block; }
+.cc-thumb--more {
+  display: flex; align-items: center; justify-content: center;
+  background: #131313; border: 1px solid var(--line); transition: border-color .3s, background .3s;
+}
+.cc-card--more:hover .cc-thumb--more { border-color: var(--red); background: rgba(224,32,31,.08); }
+.cc-card--more__ico {
+  display: flex; align-items: center; justify-content: center; width: 56px; height: 56px;
+  border: 1px solid #3a3a3a; border-radius: 50%; font-size: 0; color: #cfcfcf;
+  transition: transform .3s, border-color .3s, color .3s; position: relative;
+}
+.cc-card--more__ico::before {
+  content: ""; width: 22px; height: 15px; background-color: currentColor;
+  -webkit-mask: var(--cx-arrow) no-repeat center / contain; mask: var(--cx-arrow) no-repeat center / contain;
+}
+.cc-card--more:hover .cc-card--more__ico { transform: translateX(6px); border-color: var(--red); color: #fff; }
+.cc-card--more .cc-title { transition: color .25s; }
+.cc-card--more:hover .cc-title { color: var(--red); }
+
+/* Індикатор скролу замість системної полоси. Видима частина — тонка лінія 3px,
+   АЛЕ зона захоплення (сам трек і «пігулка») висока (22px) і прозора, щоб мишею
+   легко було влучити й тягнути, не цілячись у тоненьку червону смужку. */
+.cc-scrollbar { position: relative; height: 22px; margin-top: 12px; cursor: pointer; }
+.cc-scrollbar::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  height: 3px; border-radius: 3px; background: rgba(255,255,255,.08); pointer-events: none;
+}
+/* Повзунок: повна висота треку — прозора зона захвату; видима лінія — у ::before. */
+.cc-scrollbar__thumb {
+  position: absolute; top: 0; left: 0; height: 100%; width: 30%;
+  background: transparent; cursor: grab; will-change: transform; transition: transform .12s linear;
+  display: flex; align-items: center; touch-action: none;
+}
+.cc-scrollbar__thumb::before {
+  content: ""; width: 100%; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--red), var(--red-bright));
+  transition: height .15s ease;
+}
+.cc-scrollbar:hover .cc-scrollbar__thumb::before,
+.cc-scrollbar.is-dragging .cc-scrollbar__thumb::before { height: 5px; }
+.cc-scrollbar__thumb:active, .cc-scrollbar.is-dragging .cc-scrollbar__thumb { cursor: grabbing; }
+
+.cc-card { cursor: pointer; opacity: 0; min-width: 0; animation: ccUp .55s cubic-bezier(.16,.8,.24,1) forwards; }
+@keyframes ccUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
+.cc-thumb { position: relative; aspect-ratio: 4/5; background: #000; overflow: hidden; border-radius: 3px; }
+.cc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block;
+  filter: grayscale(.25) brightness(.9); transition: transform .9s cubic-bezier(.16,.8,.24,1), filter .5s; }
+.cc-card:hover .cc-thumb img { transform: scale(1.06); filter: grayscale(0) brightness(1); }
+.cc-thumb::before { content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(0deg, rgba(0,0,0,.55), transparent 55%); opacity: .7; transition: opacity .4s; pointer-events: none; }
+.cc-card:hover .cc-thumb::before { opacity: 1; }
+
+/* Бейдж кількості роликів (для кейсів із кількома відео) */
+.cc-badge { position: absolute; top: 12px; left: 12px; z-index: 3; background: rgba(224,32,31,.92); color: #fff;
+  font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 5px 10px; border-radius: 2px; }
+
+/* Hover-оверлей: сірий блок «блок у блоці», фото нерухоме під ним */
+.cc-ov { position: absolute; inset: 0; z-index: 2; opacity: 0; transition: opacity .35s ease; }
+.cc-card:hover .cc-ov { opacity: 1; }
+.cc-ov__box { position: absolute; inset: 12px; background: rgba(16,16,16,.9); border: 1px solid rgba(255,255,255,.12);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; text-align: center; padding: 16px;
+  transform: scale(1.03); transition: transform .35s ease; }
+.cc-card:hover .cc-ov__box { transform: scale(1); }
+.cc-ov__title { color: #fff; font-size: 19px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; line-height: 1.25; }
+.cc-ov__year { color: #e0201f; font-size: 14px; font-weight: 700; letter-spacing: 1px; }
+.cc-ov__place { color: #d0d0d0; font-size: 11px; text-transform: uppercase; letter-spacing: 1.8px; }
+
+/* Підвал картки: назва зверху, під нею рядок «категорія · дивитись кейс» */
+.cc-foot { padding: 16px 2px 0; }
+.cc-title { font-size: 17px; color: #fff; font-weight: 700; text-transform: uppercase; letter-spacing: .3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 10px; }
+.cc-foot__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 2px; }
+.cc-cat { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #8a8a8a; }
+/* «Дивитись кейс» — акуратна кнопка праворуч від категорії */
+.cc-open { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700;
+  letter-spacing: 1.2px; text-transform: uppercase; color: #cfcfcf; white-space: nowrap; cursor: pointer;
+  transition: color .2s, gap .2s; }
+.cc-open i { display: inline-block; width: 15px; height: 11px; font-style: normal; font-size: 0;
+  background-color: #e0201f; -webkit-mask: var(--cx-arrow) no-repeat center / contain; mask: var(--cx-arrow) no-repeat center / contain;
+  transition: transform .25s; }
+.cc-open:hover, .cc-card:hover .cc-open { color: #fff; }
+.cc-open:hover i, .cc-card:hover .cc-open i { transform: translateX(4px); }
+.cc-empty { color: #666; font-size: 14px; padding: 60px 0; text-align: center; grid-column: 1 / -1; }
+
+/* ============ Відео/кейс-модалка: зліва відео + сітка роликів, справа опис на всю висоту ============ */
+.cc-vmodal { position: fixed; inset: 0; z-index: 10000; display: none; }
+.cc-vmodal.is-open { display: flex; align-items: center; justify-content: center; padding: 20px 0; }
+.cc-vmodal__overlay { position: absolute; inset: 0; background: rgba(0,0,0,.9); backdrop-filter: blur(4px); animation: ccFadeIn .25s ease; }
+
+/* Каркас: CSS grid у 2 колонки. Ліва — відео (компактне, не на всю висоту) + сітка
+   роликів під ним. Права — опис на всю висоту модалки, зі своїм скролом.
+   Сам блок центрується по вертикалі (align-items:center на .cc-vmodal), тому
+   картка з одним відео (без роликів) не «прилипає» до верху вікна. */
+.cc-vmodal__box { position: relative; display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, 420px);
+  align-items: stretch; width: min(1180px, 94vw); max-height: 88vh; margin: 0;
+  background: #101010; border: 1px solid #222; border-radius: 6px; overflow: hidden;
+  box-shadow: 0 30px 90px rgba(0,0,0,.7); animation: ccFadeIn .2s ease; }
+/* Обгортка контенту: на ПК/планшеті «прозора» для гріда (display:contents),
+   тому розкладка колонок не змінюється. На телефоні стає скрол-контейнером. */
+.cc-vmodal__scroll { display: contents; }
+.cc-vmodal__x { position: absolute; top: 10px; right: 14px; z-index: 5; background: rgba(0,0,0,.55); border: none; color: #fff;
+  width: 40px; height: 40px; border-radius: 50%; font-size: 28px; line-height: 1; cursor: pointer; transition: background .2s; }
+.cc-vmodal__x:hover { background: #e0201f; }
+
+/* Ліва колонка: відео зверху + сітка роликів знизу, з власним скролом якщо роликів багато */
+.cc-vmodal__left { display: flex; flex-direction: column; min-width: 0; max-height: 88vh; overflow-y: auto; background: #0a0a0a; }
+.cc-vmodal__player { position: relative; flex: 0 0 auto; width: 100%; max-height: 56vh; aspect-ratio: 16/9; background: #000; }
+.cc-vmodal__player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Опис — права колонка, на всю висоту, прокручується незалежно від відео */
+.cc-vmodal__side { min-width: 0; max-width: 420px; display: flex; flex-direction: column; padding: 34px 30px;
+  max-height: 88vh; overflow-y: auto; border-left: 1px solid #1c1c1c; }
+.cc-vmodal__sideTop { flex: 1 1 auto; }
+.cc-vmodal__cat { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #e0201f; font-weight: 700; }
+.cc-vmodal__title { margin: 12px 0 12px; color: #fff; font-family: 'Archivo', sans-serif; font-size: 26px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .3px; line-height: 1.1; word-break: break-word; }
+.cc-vmodal__meta { color: #9a9a9a; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 20px; }
+.cc-vmodal__desc { color: #bcbcbc; font-size: 14.5px; font-weight: 400; text-transform: none; line-height: 1.75; white-space: pre-line; word-break: break-word; }
+/* Структурований кейс (Задача / Наше рішення / Що було зроблено) */
+.cc-vmodal__desc .cc-case__block { margin-bottom: 20px; white-space: normal; }
+.cc-vmodal__desc .cc-case__block h4 { color: #e0201f; font-size: 12.5px; letter-spacing: 1.6px; text-transform: uppercase;
+  margin: 0 0 8px; font-weight: 800; }
+.cc-vmodal__desc .cc-case__block p { margin: 0; color: #c8c8c8; font-weight: 400; text-transform: none; white-space: pre-line; }
+
+/* Сітка роликів кейсу (Reels) — під основним відео, у лівій колонці */
+.cc-vmodal__reels { display: none; flex: 0 0 auto; padding: 24px 22px 24px; border-top: 1px solid #1c1c1c; }
+.cc-vmodal__reels.cc-on { display: block; }
+/* Селектор із .cx попереду — щоб перебити глобальне правило `.cx h4 { margin:0 }`
+   (у нього вища специфічність, і без цього відступ під заголовком «Ролики кейсу»
+   зникав, а сітка роликів прилипала до тексту). */
+.cx .cc-vmodal__reelsTitle,
+.cc-vmodal__reelsTitle { color: #e0201f; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 20px; font-weight: 700; }
+.cc-reels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 116px)); gap: 10px; justify-content: start; }
+.cc-reel { background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit; text-align: left; }
+.cc-reel__media { position: relative; display: block; aspect-ratio: 9/16; background: #000; border: 1px solid #242424; border-radius: 3px; overflow: hidden; }
+.cc-reel__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s, opacity .3s; opacity: .82; }
+.cc-reel:hover .cc-reel__media img { transform: scale(1.06); opacity: 1; }
+.cc-reel--active .cc-reel__media { border-color: #e0201f; }
+.cc-reel__play { position: absolute; inset: 0; margin: auto; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; transition: background .25s; }
+.cc-reel:hover .cc-reel__play { background: #e0201f; }
+.cc-reel__play svg { width: 11px; height: 11px; fill: #fff; margin-left: 2px; }
+.cc-reel__n { display: block; margin-top: 6px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #9a9a9a; }
+.cc-reel--active .cc-reel__n { color: #fff; }
+
+.cc-vmodal__ext { flex: 0 0 auto; align-self: flex-start; margin-top: 24px; font-size: 12px; letter-spacing: 1px;
+  text-transform: uppercase; color: #fff; border-bottom: 2px solid #e0201f; padding-bottom: 3px; text-decoration: none; transition: border-color .2s; }
+.cc-vmodal__ext:hover { border-color: #ff3b3b; }
+/* fallback (YouTube на file://) */
+.cc-vmodal__fallback { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; text-decoration: none; overflow: hidden; }
+.cc-vmodal__fallback img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .35; }
+.cc-vmodal__fallbackBtn { position: relative; color: #fff; font-size: 18px; letter-spacing: 1px; background: rgba(224,32,31,.92); padding: 12px 24px; border-radius: 3px; }
+.cc-vmodal__hint { position: relative; color: #e6c07a; font-size: 12px; max-width: 360px; text-align: center; line-height: 1.5; padding: 0 20px; }
+
+/* ============ Модалка керування (адмінка) ============ */
+.cc-modal { position: fixed; inset: 0; z-index: 9999; display: none; }
+.cc-modal.is-open { display: block; }
+.cc-modal__overlay { position: absolute; inset: 0; background: rgba(0,0,0,.75); backdrop-filter: blur(3px); animation: ccFadeIn .25s ease; }
+.cc-modal__box { position: relative; max-width: 760px; width: calc(100% - 40px); margin: 6vh auto 40px; max-height: 88vh; overflow-y: auto; overflow-x: hidden;
+  background: #131313; border: 1px solid #242424; border-radius: 6px; box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  animation: ccFadeIn .2s ease; font-family: 'Inter', Arial, sans-serif; }
+@keyframes ccFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.cc-modal__x { position: absolute; top: 14px; right: 16px; background: none; border: none; color: #888; font-size: 30px; line-height: 1; cursor: pointer; transition: color .2s; z-index: 2; }
+.cc-modal__x:hover { color: #fff; }
+.cc-modal__head { display: flex; align-items: center; gap: 14px; padding: 24px 28px 0; }
+.cc-modal__back { background: none; border: none; color: #9a9a9a; cursor: pointer; font-size: 14px; padding: 0; transition: color .2s; font-family: inherit; }
+.cc-modal__back:hover { color: #fff; }
+.cc-modal__title { margin: 0; color: #fff; font-size: 22px; letter-spacing: 1px; text-transform: uppercase; font-weight: 800; }
+.cc-modal__body { padding: 22px 28px 28px; overflow-x: hidden; }
+.cc-modal__empty { color: #888; padding: 26px 4px; font-size: 15px; }
+
+.cc-choose { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 16px; }
+.cc-choose__item { display: flex; align-items: center; gap: 16px; text-align: left; cursor: pointer; background: #0e0e0e;
+  border: 1px solid #262626; border-radius: 5px; padding: 24px 22px; transition: border-color .2s, background .2s; font-family: inherit; }
+.cc-choose__item:hover { border-color: #e0201f; background: #161616; }
+.cc-choose__ico { width: 46px; height: 46px; flex: 0 0 46px; display: flex; align-items: center; justify-content: center; background: #e0201f; color: #fff; border-radius: 50%; font-size: 24px; }
+.cc-choose__txt { display: flex; flex-direction: column; min-width: 0; }
+.cc-choose__txt b { color: #fff; font-size: 16px; }
+.cc-choose__txt i { color: #8a8a8a; font-size: 12px; font-style: normal; margin-top: 3px; white-space: normal; word-break: break-word; }
+
+.cc-list { display: flex; flex-direction: column; gap: 10px; }
+.cc-litem { display: flex; align-items: center; gap: 14px; background: #0e0e0e; border: 1px solid #242424; border-radius: 4px; padding: 10px 12px; }
+.cc-litem__thumb { width: 76px; height: 44px; flex: 0 0 76px; background: #000; border-radius: 3px; overflow: hidden; }
+.cc-litem__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.cc-litem__meta { flex: 1 1 auto; min-width: 0; }
+.cc-litem__meta b { color: #fff; font-size: 14px; display: block; white-space: normal; word-break: break-word; }
+.cc-litem__meta i { color: #e0201f; font-size: 11px; font-style: normal; text-transform: uppercase; letter-spacing: 1px; }
+.cc-litem__actions { display: flex; gap: 8px; flex: 0 0 auto; flex-wrap: wrap; }
+.cc-mini { background: transparent; border: 1px solid #333; color: #ccc; padding: 7px 14px; font-size: 12px; border-radius: 2px; cursor: pointer; transition: border-color .2s, background .2s, color .2s; font-family: inherit; }
+.cc-mini:hover { border-color: #e0201f; color: #fff; }
+.cc-mini--danger:hover { border-color: #7a2020; background: #7a2020; color: #fff; }
+
+/* форма */
+.cc-form .cc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
+.cc-field { display: flex; flex-direction: column; }
+.cc-field--full { grid-column: 1 / -1; }
+.cc-field--half { grid-column: span 1; }
+.cc-field label { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: #9a9a9a; margin-bottom: 7px; }
+.cc-req { color: #e0201f; }
+.cc-field input, .cc-field textarea, .cc-field select { background: #0b0b0b; border: 1px solid #2b2b2b; color: #f2f2f2;
+  padding: 12px 14px; font-size: 14px; border-radius: 2px; outline: none; transition: border-color .2s; font-family: inherit; }
+.cc-field input:focus, .cc-field textarea:focus, .cc-field select:focus { border-color: #e0201f; }
+.cc-field textarea { resize: vertical; min-height: 96px; }
+.cc-field select { color: #fff; -webkit-appearance: none; appearance: none; padding-right: 34px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%23888' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; }
+.cc-field select option { background: #161616; color: #fff; }
+
+/* ---- Динамічний список відео у формі кейсу ---- */
+.cc-vhint { color: #7a7a7a; font-size: 12px; line-height: 1.5; margin: -2px 0 12px; }
+.cc-videos { display: flex; flex-direction: column; gap: 10px; }
+.cc-vrow { display: flex; align-items: center; gap: 12px; background: #0b0b0b; border: 1px solid #262626; border-radius: 4px; padding: 8px 10px; }
+.cc-vrow--cover { border-color: #3a2a2a; }
+.cc-vrow__thumb { position: relative; flex: 0 0 auto; width: 72px; height: 44px; background: #000; border-radius: 3px; overflow: hidden; border: 1px solid #242424; display: flex; align-items: center; justify-content: center; }
+.cc-vrow__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.cc-vrow__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cc-vrow__main input { background: transparent; border: 0; border-bottom: 1px solid #262626; color: #f2f2f2; font-family: inherit; font-size: 14px; padding: 6px 0; outline: none; transition: border-color .2s; }
+.cc-vrow__main input:focus { border-bottom-color: #e0201f; }
+.cc-vrow__meta { color: #7a7a7a; font-size: 11px; }
+.cc-vrow__meta b { color: #ccc; }
+.cc-vrow__del { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: transparent; border: 1px solid #333; color: #aaa; font-size: 20px; line-height: 1; cursor: pointer; transition: all .2s; }
+.cc-vrow__del:hover { border-color: #7a2020; background: #7a2020; color: #fff; }
+.cc-addvid { margin-top: 12px; background: transparent; border: 1px dashed #333; color: #cfcfcf; cursor: pointer; font-family: inherit; font-size: 13px; letter-spacing: .5px; padding: 11px 18px; border-radius: 3px; transition: all .2s; }
+.cc-addvid:hover { border-color: #e0201f; color: #fff; background: rgba(224,32,31,.08); }
+
+/* ---- Список категорій у адмінці (додати/змінити/видалити) ---- */
+.cc-cats { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.cc-catrow { display: flex; align-items: center; gap: 12px; }
+.cc-catinput { flex: 1 1 auto; min-width: 0; background: #0b0b0b; border: 1px solid #2b2b2b; color: #f2f2f2;
+  padding: 12px 14px; font-size: 14px; border-radius: 2px; outline: none; transition: border-color .2s; font-family: inherit; }
+.cc-catinput:focus { border-color: #e0201f; }
+
+/* ---- Картки послуг у адмінці «Що ми робимо» ---- */
+.cc-svc-list { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+.cc-svc-row { position: relative; background: #0e0e0e; border: 1px solid #242424; border-radius: 6px; padding: 18px 16px 6px; }
+.cc-svc-row .cc-grid { grid-template-columns: 1fr 1fr; }
+.cc-svc-row__del { position: absolute; top: 10px; right: 10px; z-index: 2; }
+
+.cc-form-actions { display: flex; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
+.cc-status { font-size: 13px; }
+.cc-status--ok { color: #4caf50; }
+.cc-status--err { color: #ff5c5c; }
+.cc-status--load { color: #d0a24a; }
+
+/* ---------- Кастомний скролбар ---------- */
+.cc-modal__box, .cc-vmodal__side, .cc-vmodal__left, .cc-field textarea, .cc-modal__body {
+  scrollbar-width: thin; scrollbar-color: #3a3a3a #131313;
+}
+.cc-modal__box::-webkit-scrollbar, .cc-vmodal__side::-webkit-scrollbar, .cc-vmodal__left::-webkit-scrollbar,
+.cc-field textarea::-webkit-scrollbar, .cc-modal__body::-webkit-scrollbar { width: 10px; height: 10px; }
+.cc-modal__box::-webkit-scrollbar-track, .cc-vmodal__side::-webkit-scrollbar-track, .cc-vmodal__left::-webkit-scrollbar-track,
+.cc-field textarea::-webkit-scrollbar-track, .cc-modal__body::-webkit-scrollbar-track { background: #131313; }
+.cc-modal__box::-webkit-scrollbar-thumb, .cc-vmodal__side::-webkit-scrollbar-thumb, .cc-vmodal__left::-webkit-scrollbar-thumb,
+.cc-field textarea::-webkit-scrollbar-thumb, .cc-modal__body::-webkit-scrollbar-thumb {
+  background: #3a3a3a; border-radius: 6px; border: 2px solid #131313; }
+.cc-modal__box::-webkit-scrollbar-thumb:hover, .cc-vmodal__side::-webkit-scrollbar-thumb:hover, .cc-vmodal__left::-webkit-scrollbar-thumb:hover,
+.cc-field textarea::-webkit-scrollbar-thumb:hover, .cc-modal__body::-webkit-scrollbar-thumb:hover { background: #e0201f; }
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 1080px) { .cc-cases { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px) {
+  .cc-cases { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 760px) { .cc-wrap--scroll .cc-card { width: 240px; } }
+@media (max-width: 480px) { .cc-wrap--scroll .cc-card { width: 208px; } }
+/* Планшет: колонки все ще поруч, лише трохи вужча права колонка */
+@media (max-width: 1080px) and (min-width: 981px) {
+  .cc-vmodal__box { grid-template-columns: minmax(0, 1.4fr) minmax(280px, 340px); }
+}
+/* < 980px: відео + сітка роликів і опис стають одна під одною (у порядку зліва-направо,
+   тобто зверху-вниз: відео → ролики → текст). Уся модалка — один спільний скрол,
+   щоб на мобільному не було двох незалежних, «плаваючих» скрол-зон одночасно. */
+@media (max-width: 980px) {
+  .cc-vmodal__box { grid-template-columns: 1fr; width: calc(100% - 24px); max-height: 92vh;
+    margin: 4vh auto; overflow-y: auto; }
+  .cc-vmodal__left { max-height: none; overflow: visible; }
+  .cc-vmodal__player { max-height: none; }
+  .cc-vmodal__side { max-width: none; min-width: 0; max-height: none; overflow: visible;
+    padding: 26px 22px 30px; border-left: none; border-top: 1px solid #1c1c1c; }
+  .cc-reels-grid { grid-template-columns: repeat(auto-fill, minmax(82px, 108px)); }
+}
+@media (max-width: 760px) {
+  .cc-vmodal__reels { padding: 18px 18px 20px; }
+}
+@media (max-width: 560px) {
+  .cc-cases { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cc-head h2 { font-size: 28px; }
+  /* Телефон: у вузькій картці назва / категорія / «дивитись кейс» — окремими рядками,
+     щоб кнопка не налазила на сусідній блок. */
+  .cc-foot__row { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .cc-choose { grid-template-columns: 1fr; }
+  .cc-form .cc-grid { grid-template-columns: 1fr; }
+  .cc-field--half { grid-column: 1 / -1; }
+  .cc-modal__box { margin: 0; width: 100%; min-height: 100%; max-height: 100%; border-radius: 0; }
+  .cc-litem__actions { flex-direction: column; }
+  /* Кейс-модалка на телефоні — саме ВІКНО (модалка), а не сторінка: з відступами
+     від країв, заокругленням і власним внутрішнім скролом. × зафіксований у кутку. */
+  .cc-vmodal.is-open { padding: 0; align-items: center; justify-content: center; }
+  /* Зверху лишаємо смужку (padding-top) під × — щоб хрестик був НАД відео, у кутку
+     вікна, а не поверх плеєра (де його «перехоплював» iframe і він не тиснувся). */
+  .cc-vmodal__box { width: calc(100% - 24px); max-width: 460px; max-height: 86vh; height: auto;
+    margin: auto; border-radius: 12px; overflow: hidden; padding-top: 50px;
+    box-shadow: 0 30px 90px rgba(0,0,0,.7); border: 1px solid #1e1e1e;
+    display: flex; flex-direction: column; }
+  /* Скролиться лише контент, тому × лишається на місці у верхній смужці вікна.
+     БЕЗ -webkit-overflow-scrolling:touch — інакше на iOS контейнер momentum-скролу
+     «зʼїдає» тапи по вбудованому відео (не можна поставити паузу / увімкнути звук). */
+  .cc-vmodal__scroll { display: block; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+  .cc-vmodal__left { max-height: none; overflow: visible; }
+  .cc-vmodal__player { max-height: none; aspect-ratio: 16/9; }
+  .cc-vmodal__side { max-width: none; padding: 22px 18px 26px; border-left: none; border-top: 1px solid #1c1c1c; }
+  /* × у верхній смужці, над відео, велика зона натискання */
+  .cc-vmodal__x { top: 7px; right: 10px; width: 44px; height: 44px; font-size: 28px; z-index: 20; background: rgba(255,255,255,.08); }
+  .cc-vmodal__x:hover, .cc-vmodal__x:active { background: #e0201f; }
+  .cc-reels-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .cc-ov__title { font-size: 16px; }
+  /* Адмін-модалка на телефоні теж на весь екран, без «плаваючих» країв. */
+  .cc-modal.is-open { display: block; }
+  .cc-modal__box { margin: 0; width: 100%; min-height: 100vh; min-height: 100dvh; max-height: none; border-radius: 0; }
+}
+
