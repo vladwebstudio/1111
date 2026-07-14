@@ -42,6 +42,7 @@ var SHEET_LEADS      = 'leads';
 var SHEET_HERO       = 'hero';        // заголовок/опис hero + заголовок секції «Що ми робимо»
 var SHEET_CATEGORIES = 'categories';  // список категорій проєктів (керує hero + фільтрами)
 var SHEET_SERVICES   = 'services';    // картки секції «Що ми робимо» (тег/назва/опис/фільтр)
+var IMAGES_FOLDER    = 'Contrabas site images'; // папка на Google Drive для завантажених фото (hero/про нас)
 
 var HEADERS = ['id','created_at','name_uk','name_en','category','year','placement',
                'provider','video_id','video_url','thumb','desc_uk','desc_en','reels'];
@@ -62,7 +63,11 @@ var HERO_KEYS = {
   lead:             { uk: 'Створюємо відео та контент, що привертає увагу, підсилює бренди і працює на результат.',
                       en: 'We create video and content that grabs attention, strengthens brands and drives results.' },
   services_eyebrow: { uk: 'Що ми робимо', en: 'What we do' },
-  services_title:   { uk: 'Відеопродакшн\nта контент\nповного циклу', en: 'Full-service\nvideo production\n& content' }
+  services_title:   { uk: 'Відеопродакшн\nта контент\nповного циклу', en: 'Full-service\nvideo production\n& content' },
+  // URL фотографій hero-фону та секції «Про нас». Порожньо = лишається дефолтне фото
+  // з HTML (сайт нічого не перезаписує, поки в таблиці немає значення).
+  hero_photo:       { uk: '', en: '' },
+  about_photo:      { uk: '', en: '' }
 };
 
 /* Стартовий список категорій (як у ТЗ). Далі керується з адмінпанелі/таблиці. */
@@ -106,6 +111,16 @@ function doPost(e) { return handle_(e); }
 
 function handle_(e) {
   var p = (e && e.parameter) ? e.parameter : {};
+  // POST із JSON-тілом (напр. завантаження фото — воно завелике для GET/JSONP).
+  // Розбираємо body у ті самі параметри, щоб решта коду працювала без змін.
+  if (e && e.postData && e.postData.contents) {
+    try {
+      var body = JSON.parse(e.postData.contents);
+      if (body && typeof body === 'object') {
+        Object.keys(body).forEach(function (k) { p[k] = body[k]; });
+      }
+    } catch (er) { /* не JSON — ігноруємо, лишаються query-параметри */ }
+  }
   var callback = p.callback || '';
   var action = p.action || 'list';
   var out;
@@ -120,6 +135,7 @@ function handle_(e) {
     else if (action === 'update_hero')       out = updateHero_(p);
     else if (action === 'update_categories') out = updateCategories_(p);
     else if (action === 'update_services')   out = updateServices_(p);
+    else if (action === 'upload_image')      out = uploadImage_(p);
     else                                     out = { ok: true, items: listCases_() };
   } catch (err) {
     out = { ok: false, error: String(err && err.message ? err.message : err) };
@@ -131,6 +147,35 @@ function handle_(e) {
   }
   return ContentService.createTextOutput(json)
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* ============================================================
+   Завантаження фото (drag & drop у адмінці).
+   Сайт надсилає POST з base64 картинки; тут зберігаємо файл у папку на Google
+   Drive, робимо його публічним і повертаємо пряме посилання для <img src>.
+   ⚠ Перший виклик попросить дозвіл на Google Drive — підтвердь своїм акаунтом.
+   ============================================================ */
+function uploadImage_(p) {
+  if (!p || !p.data) return { ok: false, error: 'no image data' };
+  var mime = p.mime || 'image/jpeg';
+  var ext  = (mime === 'image/png') ? '.png' : (mime === 'image/webp') ? '.webp' : '.jpg';
+  var name = (p.name ? String(p.name).replace(/[^\w\-]+/g, '_') : 'photo') + '_' + Date.now() + ext;
+  var bytes = Utilities.base64Decode(p.data);
+  var blob  = Utilities.newBlob(bytes, mime, name);
+  var folder = getImagesFolder_();
+  var file = folder.createFile(blob);
+  // Робимо доступним «усім, у кого є посилання» — інакше фото не покажеться на сайті.
+  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
+  var id = file.getId();
+  // Пряме посилання на зображення через googleusercontent (надійно працює в <img>).
+  // =w2400 — максимальна ширина (фото вже стиснуте на клієнті, тож не збільшується).
+  return { ok: true, id: id, url: 'https://lh3.googleusercontent.com/d/' + id + '=w2400' };
+}
+
+function getImagesFolder_() {
+  var it = DriveApp.getFoldersByName(IMAGES_FOLDER);
+  if (it.hasNext()) return it.next();
+  return DriveApp.createFolder(IMAGES_FOLDER);
 }
 
 /* ============================================================

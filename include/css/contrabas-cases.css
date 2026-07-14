@@ -283,6 +283,28 @@
 
 /* ---- Динамічний список відео у формі кейсу ---- */
 .cc-vhint { color: #7a7a7a; font-size: 12px; line-height: 1.5; margin: -2px 0 12px; }
+
+/* ---- Превʼю фото в екрані "Фото сайту" ---- */
+.cc-photo-preview { display: flex; align-items: center; gap: 12px; margin: -4px 0 12px; }
+.cc-photo-preview span { color: #7a7a7a; font-size: 12px; flex: 0 0 auto; }
+.cc-photo-preview img { width: 120px; height: 72px; object-fit: cover; border-radius: 4px; border: 1px solid #262626; background: #0b0b0b; }
+
+/* ---- Зона перетягування фото (drag & drop) ---- */
+.cc-drop { position: relative; border: 2px dashed #333; border-radius: 8px; background: #0d0d0d; padding: 26px 18px;
+  text-align: center; cursor: pointer; transition: border-color .2s, background .2s; margin-bottom: 10px; }
+.cc-drop:hover { border-color: #4a4a4a; background: #101010; }
+.cc-drop.is-drag { border-color: #e0201f; background: #1a0d0d; }
+/* pointer-events:none — щоб drop/клік ішли на всю зону (.cc-drop), а не на сам
+   input (інакше файл-інпут нативно теж ловив би drop → подвійне завантаження). */
+.cc-drop__input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.cc-drop__inner { pointer-events: none; }
+.cc-drop__ico { font-size: 26px; color: #e0201f; line-height: 1; margin-bottom: 8px; }
+.cc-drop__title { color: #eaeaea; font-size: 15px; font-weight: 600; }
+.cc-drop__sub { color: #7a7a7a; font-size: 12px; margin-top: 4px; }
+.cc-drop__url { margin: 2px 0 4px; }
+.cc-drop__url summary { color: #7a7a7a; font-size: 12px; cursor: pointer; user-select: none; list-style: revert; }
+.cc-drop__url summary:hover { color: #aaa; }
+.cc-drop__url input { margin-top: 8px; }
 .cc-videos { display: flex; flex-direction: column; gap: 10px; }
 .cc-vrow { display: flex; align-items: center; gap: 12px; background: #0b0b0b; border: 1px solid #262626; border-radius: 4px; padding: 8px 10px; }
 .cc-vrow--cover { border-color: #3a2a2a; }

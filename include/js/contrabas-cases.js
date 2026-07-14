@@ -67,7 +67,24 @@
       svcAll: 'Всі кейси', needSvc: 'Додайте хоча б одну послугу.',
       svcHeadHint: 'Заголовок і підпис секції.',
       svcHint: 'Кожна картка: тег, назва, опис і категорія — саме за нею фільтруються кейси при кліку «Дивитись роботи».',
-      viewWork: 'Дивитись роботи'
+      viewWork: 'Дивитись роботи',
+      choosePhotos: 'Фото сайту', choosePhotosSub: 'Фон Hero і фото в секції «Про нас»',
+      photosScreenTitle: 'Фото сайту',
+      heroPhotoLabel: 'Фото фону Hero (посилання)',
+      aboutPhotoLabel: 'Фото в секції «Про нас» (посилання)',
+      photoUrlPh: 'https://…',
+      photoHint: 'Вставляй пряме посилання на зображення (закінчується на .jpg/.png/.webp) — напр. з Google Drive («Отримати посилання» → відкрити доступ «Всім, у кого є посилання», потім перетворити на пряме: https://drive.google.com/uc?export=view&id=ID_ФАЙЛУ) або з будь-якого хостингу картинок (Imgur тощо). Порожнє поле = лишається поточне фото.',
+      heroPhotoSize: 'Рекомендований розмір: горизонтальне фото, мінімум 1920×1080px (краще 2400×1350px), формат JPG. Фото на весь екран, тому чим ширше — тим чіткіше.',
+      aboutPhotoSize: 'Рекомендований розмір: горизонтальне фото (співвідношення сторін приблизно 3:2, напр. 1200×800px і більше). Показується без обрізання — яка фотографія, така й буде на сайті.',
+      photoPreview: 'Поточне фото:',
+      dropTitle: 'Перетягни фото сюди',
+      dropSub: 'або натисни, щоб вибрати файл (JPG / PNG)',
+      dropOr: 'або встав посилання вручну:',
+      uploading: 'Завантаження фото…',
+      uploaded: 'Фото завантажено ✓',
+      photoBadType: 'Потрібен файл JPG або PNG.',
+      photoReadErr: 'Не вдалося прочитати файл.',
+      photoUploadErr: 'Не вдалося завантажити фото. Перевір інтернет і що скрипт перерозгорнуто.'
     },
     en: {
       heading: 'Our work', eyebrow: 'Our cases',
@@ -122,7 +139,24 @@
       svcAll: 'All work', needSvc: 'Add at least one service.',
       svcHeadHint: 'Section title and eyebrow.',
       svcHint: 'Each card: tag, name, description and a category — clicking "View work" filters cases by it.',
-      viewWork: 'View work'
+      viewWork: 'View work',
+      choosePhotos: 'Site photos', choosePhotosSub: 'Hero background and the "About us" photo',
+      photosScreenTitle: 'Site photos',
+      heroPhotoLabel: 'Hero background photo (link)',
+      aboutPhotoLabel: '"About us" photo (link)',
+      photoUrlPh: 'https://…',
+      photoHint: 'Paste a direct image link (ending in .jpg/.png/.webp) — e.g. from Google Drive ("Get link" → set access to "Anyone with the link", then convert to a direct link: https://drive.google.com/uc?export=view&id=FILE_ID) or any image host (Imgur etc). Leave empty to keep the current photo.',
+      heroPhotoSize: 'Recommended size: landscape photo, at least 1920×1080px (2400×1350px is better), JPG. It fills the whole screen, so wider = sharper.',
+      aboutPhotoSize: 'Recommended size: landscape photo (roughly 3:2 ratio, e.g. 1200×800px or larger). Shown uncropped — whatever the photo looks like is exactly how it appears on the site.',
+      photoPreview: 'Current photo:',
+      dropTitle: 'Drag a photo here',
+      dropSub: 'or click to choose a file (JPG / PNG)',
+      dropOr: 'or paste a link manually:',
+      uploading: 'Uploading photo…',
+      uploaded: 'Photo uploaded ✓',
+      photoBadType: 'JPG or PNG file required.',
+      photoReadErr: 'Could not read the file.',
+      photoUploadErr: 'Could not upload the photo. Check your internet and that the script is re-deployed.'
     }
   }[LANG];
 
@@ -770,6 +804,10 @@
           '<span class="cc-choose__ico">▤</span>' +
           '<span class="cc-choose__txt"><b>' + esc(T.chooseServices) + '</b><i>' + esc(T.chooseServicesSub) + '</i></span>' +
         '</button>' +
+        '<button type="button" class="cc-choose__item" id="cc-go-photos">' +
+          '<span class="cc-choose__ico">🖼</span>' +
+          '<span class="cc-choose__txt"><b>' + esc(T.choosePhotos) + '</b><i>' + esc(T.choosePhotosSub) + '</i></span>' +
+        '</button>' +
       '</div>';
     document.getElementById('cc-go-add').addEventListener('click', function () { screenForm(null); });
     document.getElementById('cc-go-edit').addEventListener('click', screenList);
@@ -778,6 +816,7 @@
     document.getElementById('cc-go-hero').addEventListener('click', screenHero);
     document.getElementById('cc-go-cats').addEventListener('click', screenCategories);
     document.getElementById('cc-go-services').addEventListener('click', screenServices);
+    document.getElementById('cc-go-photos').addEventListener('click', screenPhotos);
   }
 
   /* ---------- Екран: редагувати Hero (заголовок + опис) ---------- */
@@ -833,7 +872,158 @@
         if (btn) btn.disabled = false;
         if (res && res.ok) {
           setStatus(T.settingsSaved, 'ok');
-          SITE_HERO = vals;
+          // Об'єднуємо, а не перезаписуємо — SITE_HERO містить ще й фото/сервіси.
+          SITE_HERO = SITE_HERO || {};
+          Object.keys(vals).forEach(function (k) { SITE_HERO[k] = vals[k]; });
+          applyHeroToPage();
+        } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
+      }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
+    });
+  }
+
+  /* ---------- Завантаження фото: читання + стиснення на клієнті ----------
+     Перетягнутий JPG/PNG зчитуємо, зменшуємо через canvas до maxW (щоб файл був
+     легким і не «плив»), перекодовуємо в JPEG. Повертаємо data:URL (base64). */
+  function readAndResizeImage(file, maxW, cb, errCb) {
+    if (!file || !/^image\/(jpeg|jpg|png|webp)$/i.test(file.type)) { errCb(T.photoBadType); return; }
+    var reader = new FileReader();
+    reader.onerror = function () { errCb(T.photoReadErr); };
+    reader.onload = function () {
+      var img = new Image();
+      img.onerror = function () { errCb(T.photoBadType); };
+      img.onload = function () {
+        var scale = Math.min(1, maxW / (img.naturalWidth || maxW));
+        var w = Math.max(1, Math.round(img.naturalWidth * scale));
+        var hgt = Math.max(1, Math.round(img.naturalHeight * scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = hgt;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, hgt); // фон під можливу прозорість PNG
+        ctx.drawImage(img, 0, 0, w, hgt);
+        cb(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* Завантаження фото на бекенд (POST, бо base64 завеликий для JSONP/GET).
+     Apps Script кладе файл на Google Drive і повертає пряме посилання. */
+  function uploadImageFile(dataUrl, cb, errCb) {
+    var m = /^data:(image\/[a-z]+);base64,(.+)$/i.exec(dataUrl || '');
+    if (!m) { errCb(T.photoUploadErr); return; }
+    var payload = JSON.stringify({ action: 'upload_image', mime: m[1], data: m[2], name: 'site_photo' });
+    // text/plain — щоб браузер НЕ робив CORS-preflight (Apps Script його не вміє).
+    fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload, redirect: 'follow' })
+      .then(function (r) { return r.text(); })
+      .then(function (txt) {
+        var res; try { res = JSON.parse(txt); } catch (e) { errCb(T.photoUploadErr); return; }
+        if (res && res.ok && res.url) cb(res.url); else errCb((res && res.error) ? res.error : T.photoUploadErr);
+      })
+      .catch(function () { errCb(T.photoUploadErr); });
+  }
+
+  /* ---------- Екран: фото сайту (Hero-фон + фото «Про нас») ---------- */
+  function screenPhotos() {
+    setTitle(T.photosScreenTitle, true);
+    var h = SITE_HERO || {};
+    var heroPhotoEl = document.getElementById('cx-hero-img');
+    var aboutPhotoEl = document.getElementById('cx-about-img');
+    // Значення з таблиці (uk/en однакові — фото не залежить від мови), з фолбеком
+    // на те, що зараз реально показано на сторінці.
+    var heroVal = h.hero_photo_uk || h.hero_photo_en || '';
+    var aboutVal = h.about_photo_uk || h.about_photo_en || '';
+
+    function block(key, label, sizeHint, curSrc) {
+      return '<div class="cc-field cc-field--full">' +
+          '<label>' + esc(label) + '</label>' +
+          '<div class="cc-drop" data-key="' + key + '">' +
+            '<input type="file" accept="image/jpeg,image/png,image/webp" class="cc-drop__input" id="cc-drop-' + key + '" />' +
+            '<div class="cc-drop__inner">' +
+              '<div class="cc-drop__ico">⬆</div>' +
+              '<div class="cc-drop__title">' + esc(T.dropTitle) + '</div>' +
+              '<div class="cc-drop__sub">' + esc(T.dropSub) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="cc-vhint">' + esc(sizeHint) + '</div>' +
+          '<div class="cc-photo-preview" id="cc-prev-' + key + '"' + (curSrc ? '' : ' style="display:none"') + '>' +
+            '<span>' + esc(T.photoPreview) + '</span><img src="' + esc(curSrc || '') + '" alt="" />' +
+          '</div>' +
+          '<details class="cc-drop__url"><summary>' + esc(T.dropOr) + '</summary>' +
+            '<input type="text" name="' + key + '_photo" value="' + esc(key === 'hero' ? heroVal : aboutVal) + '" placeholder="' + esc(T.photoUrlPh) + '" />' +
+          '</details>' +
+        '</div>';
+    }
+
+    body().innerHTML =
+      '<form class="cc-form" id="cc-photos-form" autocomplete="off">' +
+        '<div class="cc-grid">' +
+          block('hero', T.heroPhotoLabel, T.heroPhotoSize, heroPhotoEl ? heroPhotoEl.src : '') +
+          block('about', T.aboutPhotoLabel, T.aboutPhotoSize, aboutPhotoEl ? aboutPhotoEl.src : '') +
+          '<div class="cc-field cc-field--full"><div class="cc-vhint">' + esc(T.photoHint) + '</div></div>' +
+        '</div>' +
+        '<div class="cc-form-actions">' +
+          '<button type="submit" class="cc-btn" id="cc-photos-submit">' + esc(T.save) + '</button>' +
+          '<span class="cc-status" id="cc-status"></span>' +
+        '</div>' +
+      '</form>';
+
+    // Максимальна ширина стиснення: hero — на весь екран, тому ширше.
+    var MAXW = { hero: 2400, about: 1600 };
+
+    function handleFile(key, file) {
+      setStatus(T.uploading, 'load');
+      readAndResizeImage(file, MAXW[key], function (dataUrl) {
+        uploadImageFile(dataUrl, function (url) {
+          // Заповнюємо приховане поле-посилання + оновлюємо прев'ю одразу.
+          var input = document.querySelector('input[name="' + key + '_photo"]');
+          if (input) input.value = url;
+          var prev = document.getElementById('cc-prev-' + key);
+          if (prev) { prev.style.display = ''; prev.querySelector('img').src = url; }
+          setStatus(T.uploaded, 'ok');
+        }, function (msg) { setStatus(msg || T.photoUploadErr, 'err'); });
+      }, function (msg) { setStatus(msg || T.photoReadErr, 'err'); });
+    }
+
+    // Drag & drop + клік для кожної зони.
+    Array.prototype.forEach.call(document.querySelectorAll('.cc-drop'), function (zone) {
+      var key = zone.getAttribute('data-key');
+      var input = zone.querySelector('.cc-drop__input');
+      zone.addEventListener('click', function (e) { if (e.target !== input) input.click(); });
+      input.addEventListener('change', function () { if (input.files && input.files[0]) handleFile(key, input.files[0]); });
+      ['dragenter', 'dragover'].forEach(function (ev) {
+        zone.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); zone.classList.add('is-drag'); });
+      });
+      ['dragleave', 'dragend'].forEach(function (ev) {
+        zone.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); zone.classList.remove('is-drag'); });
+      });
+      zone.addEventListener('drop', function (e) {
+        e.preventDefault(); e.stopPropagation(); zone.classList.remove('is-drag');
+        var files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files[0]) handleFile(key, files[0]);
+      });
+    });
+
+    document.getElementById('cc-photos-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var f = e.target;
+      var heroUrl = f.elements['hero_photo'].value.trim();
+      var aboutUrl = f.elements['about_photo'].value.trim();
+      // Фото не мовозалежне — записуємо однакове значення в uk/en поля.
+      var params = {
+        action: 'update_hero',
+        hero_photo_uk: heroUrl, hero_photo_en: heroUrl,
+        about_photo_uk: aboutUrl, about_photo_en: aboutUrl
+      };
+      setStatus(T.saving, 'load');
+      var btn = document.getElementById('cc-photos-submit'); if (btn) btn.disabled = true;
+      jsonp(params).then(function (res) {
+        if (btn) btn.disabled = false;
+        if (res && res.ok) {
+          setStatus(T.settingsSaved, 'ok');
+          SITE_HERO = SITE_HERO || {};
+          SITE_HERO.hero_photo_uk = heroUrl; SITE_HERO.hero_photo_en = heroUrl;
+          SITE_HERO.about_photo_uk = aboutUrl; SITE_HERO.about_photo_en = aboutUrl;
           applyHeroToPage();
         } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
       }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
@@ -1400,6 +1590,17 @@
       tEl.innerHTML = String(title).split(/\r?\n/).map(function (s) { return esc(s); }).join('<br>');
     }
     if (lEl && lead) lEl.textContent = lead;
+    // Фото не мовозалежне — uk/en однакові, pick() тут просто бере те, що заповнене.
+    var heroPhoto = pick(SITE_HERO, 'hero_photo_uk', 'hero_photo_en');
+    var aboutPhoto = pick(SITE_HERO, 'about_photo_uk', 'about_photo_en');
+    var heroImgEl = document.getElementById('cx-hero-img');
+    var heroVideoEl = document.getElementById('cx-hero-video');
+    if (heroPhoto) {
+      if (heroImgEl) heroImgEl.src = heroPhoto;
+      if (heroVideoEl) heroVideoEl.setAttribute('poster', heroPhoto);
+    }
+    var aboutImgEl = document.getElementById('cx-about-img');
+    if (aboutPhoto && aboutImgEl) aboutImgEl.src = aboutPhoto;
   }
   // Рендер списку напрямків у hero (справа). Показуємо НЕ БІЛЬШЕ 5 пунктів —
   // щоб при великій кількості категорій список не «плив» і не ламав макет;

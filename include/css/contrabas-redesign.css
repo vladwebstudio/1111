@@ -116,8 +116,8 @@ body.cx.no-scroll { overflow: hidden; }
   opacity: 1; transition: opacity .4s ease;
 }
 .cx-header.is-stuck .cx-logo::before { opacity: 0; }
-.cx-logo img { height: 40px; width: auto; display: block; transition: height .4s ease, filter .4s ease; filter: drop-shadow(0 2px 8px rgba(0,0,0,.7)); }
-.cx-header.is-stuck .cx-logo img { height: 32px; filter: none; }
+.cx-logo img { height: 64px; width: auto; display: block; transition: height .4s ease, filter .4s ease; filter: drop-shadow(0 2px 8px rgba(0,0,0,.7)); }
+.cx-header.is-stuck .cx-logo img { height: 50px; filter: none; }
 
 .cx-nav { display: flex; align-items: center; gap: 38px; position: relative; }
 .cx-nav::before {
@@ -467,7 +467,7 @@ body.cx.no-scroll { overflow: hidden; }
 .cx-footer { border-top: 1px solid var(--line); padding: 70px 0 40px; }
 .cx-footer__top { display: grid; grid-template-columns: 1.2fr 2fr; gap: 50px; align-items: start; }
 .cx-footer__logo { display: inline-block; }
-.cx-footer__logo img { height: 44px; width: auto; display: block; }
+.cx-footer__logo img { height: 56px; width: auto; display: block; }
 .cx-footer__tagline { color: var(--txt-dim); font-size: 14px; line-height: 1.6; margin: 22px 0 0; }
 .cx-footer__cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
 .cx-footer__col { display: flex; flex-direction: column; gap: 7px; }
@@ -546,6 +546,9 @@ body.cx.no-scroll { overflow: hidden; }
   /* Коли відкрито мобільне меню — ховаємо лого за панеллю (лишається тільки бургер→×). */
   .cx-logo { transition: opacity .25s ease, visibility .25s; }
   body.cx-menu-open .cx-logo { opacity: 0; visibility: hidden; pointer-events: none; }
+  /* Збільшене лого — лише для ПК (правило вище); на телефоні/планшеті лишаємо як було. */
+  .cx-logo img { height: 40px; }
+  .cx-header.is-stuck .cx-logo img { height: 32px; }
 }
 @media (max-width: 760px) {
   .cx-container, .cx-header__inner, .cx-hero__inner { padding-left: 22px; padding-right: 22px; }
