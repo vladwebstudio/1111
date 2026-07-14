@@ -10,8 +10,73 @@
   // === ЄДИНЕ, що змінюєш при переразгортанні скрипта ===
   var ENDPOINT = 'https://script.google.com/macros/s/AKfycbwI2_M7eA8jvuwRpk-gCHYi4KhiPCAkrXbkMoSQRXpv5Jtgzsm_BgrTgw2cWHu8DZax/exec';
 
+  /* Кеш останньої відповіді Google Таблиці в localStorage: при повторному заході
+     сторінка одразу показує РЕАЛЬНІ дані (кейси/тексти/фото) з кешу, без «мигання»
+     статичного тексту з HTML, а вже потім тихо звіряється з таблицею у фоні. */
+  var CACHE_PREFIX = 'cx_cache_v1_';
+  function cacheGet(key) {
+    try {
+      var raw = localStorage.getItem(CACHE_PREFIX + key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function cacheSet(key, data) {
+    try { localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data)); } catch (e) { /* сховище недоступне — не критично */ }
+  }
+
+  /* ---------------- Loading-гейт (лише на САМИЙ ПЕРШИЙ візит) ----------------
+     Якщо кешу ще немає (перший раз на цьому пристрої) — показуємо повноекранний
+     екран завантаження і БЛОКУЄМО взаємодію із сайтом, поки не прийде відповідь
+     з Google Таблиці (кейси + hero/про нас/контакти/категорії/послуги). Далі —
+     кеш є, і при кожному наступному заході сайт відкривається миттєво з кешу,
+     без цього екрана, а свіжі дані підтягуються тихо у фоні. */
+  // «Чесний» відсоток тут неможливий — Apps Script віддає відповідь одним
+  // шматком, без проміжних подій прогресу. Тому імітуємо: швидко до ~40%,
+  // далі сповільнюючись до ~92% (типова крива «завантаження», як у браузерів),
+  // а на реальній відповіді одразу стрибаємо на 100% і ховаємо екран.
+  var gateTimer = null, gatePct = 0;
+  function gateSetPct(v) {
+    gatePct = v;
+    var bar = document.getElementById('cx-gate-bar');
+    var pct = document.getElementById('cx-gate-pct');
+    if (bar) bar.style.width = v + '%';
+    if (pct) pct.textContent = Math.round(v) + '%';
+  }
+  function showLoadingGate() {
+    var g = document.getElementById('cx-gate');
+    if (!g) return;
+    var msg = document.getElementById('cx-gate-msg');
+    var sub = document.getElementById('cx-gate-sub');
+    if (msg) msg.textContent = T.gateMsg;
+    if (sub) sub.textContent = T.gateSub;
+    gateSetPct(0);
+    if (gateTimer) clearInterval(gateTimer);
+    gateTimer = setInterval(function () {
+      var remaining = 92 - gatePct;
+      gateSetPct(gatePct + Math.max(0.5, remaining * 0.09));
+    }, 70);
+    g.classList.add('is-visible');
+    document.body.classList.add('no-scroll');
+  }
+  function hideLoadingGate() {
+    var g = document.getElementById('cx-gate');
+    if (!g) return;
+    if (gateTimer) { clearInterval(gateTimer); gateTimer = null; }
+    gateSetPct(100);
+    setTimeout(function () {
+      g.classList.remove('is-visible');
+      document.body.classList.remove('no-scroll');
+    }, 200);
+  }
+
   var LANG = /eng\.html/i.test(location.pathname) ? 'en' : 'uk';
-  var CATEGORIES = ['Commercial', 'Social Content', 'Podcasts', 'YouTube', 'Documentary'];
+  // Порожньо за замовчуванням — категорії завжди з Google Таблиці, без «фейкових»
+  // значень з коду. Порожнім лишається лише на дуже перший візит, поки триває
+  // перше завантаження (є повноекранний loading-гейт — взаємодія заблокована,
+  // доки таблиця не відповість, тож форма «Додати кейс» на практиці ніколи не
+  // відкриється з порожнім CATEGORIES; про всяк випадок форма також має свій
+  // текстовий fallback, якщо категорій немає — див. screenForm()).
+  var CATEGORIES = [];
 
   var T = {
     uk: {
@@ -84,7 +149,17 @@
       uploaded: 'Фото завантажено ✓',
       photoBadType: 'Потрібен файл JPG або PNG.',
       photoReadErr: 'Не вдалося прочитати файл.',
-      photoUploadErr: 'Не вдалося завантажити фото. Перевір інтернет і що скрипт перерозгорнуто.'
+      photoUploadErr: 'Не вдалося завантажити фото. Перевір інтернет і що скрипт перерозгорнуто.',
+      showreelLabel: 'Відео шоуріл (посилання)',
+      showreelHint: 'Посилання на Vimeo/YouTube — відкривається по кнопці «Дивитись шоуріл» у hero.',
+      gateMsg: 'Перше завантаження сайту…',
+      gateSub: 'Далі сайт відкриватиметься миттєво.',
+      passTitle: 'Пароль адмінки', passLabel: 'Пароль', passSubmit: 'Увійти',
+      passWrong: 'Невірний пароль.', passNeed: 'Введи пароль.',
+      choosePassword: 'Змінити пароль', choosePasswordSub: 'Пароль для входу в адмінку',
+      passScreenTitle: 'Змінити пароль',
+      passCurrent: 'Поточний пароль', passNew: 'Новий пароль', passNewRepeat: 'Повтори новий пароль',
+      passMismatch: 'Нові паролі не збігаються.', passSaved: 'Пароль змінено ✓'
     },
     en: {
       heading: 'Our work', eyebrow: 'Our cases',
@@ -156,7 +231,17 @@
       uploaded: 'Photo uploaded ✓',
       photoBadType: 'JPG or PNG file required.',
       photoReadErr: 'Could not read the file.',
-      photoUploadErr: 'Could not upload the photo. Check your internet and that the script is re-deployed.'
+      photoUploadErr: 'Could not upload the photo. Check your internet and that the script is re-deployed.',
+      showreelLabel: 'Showreel video (link)',
+      showreelHint: 'Vimeo/YouTube link — opens from the "Watch Showreel" button in the hero.',
+      gateMsg: 'First-time loading…',
+      gateSub: 'The site will open instantly after this.',
+      passTitle: 'Admin password', passLabel: 'Password', passSubmit: 'Enter',
+      passWrong: 'Wrong password.', passNeed: 'Enter a password.',
+      choosePassword: 'Change password', choosePasswordSub: 'Password for the admin panel',
+      passScreenTitle: 'Change password',
+      passCurrent: 'Current password', passNew: 'New password', passNewRepeat: 'Repeat new password',
+      passMismatch: 'New passwords do not match.', passSaved: 'Password changed ✓'
     }
   }[LANG];
 
@@ -380,10 +465,26 @@
 
     document.getElementById('cc-manage').addEventListener('click', openModal);
     wireModal(); wireVideoModal();
-    // Одразу показуємо демо-кейси (готовий вигляд), паралельно тягнемо реальні.
     renderFilters(); renderCases();
-    loadCases();
-    loadSite();
+    renderHeroList();
+
+    // Якщо кешу ще немає (перший візит на цьому пристрої) — показуємо
+    // повноекранний loading-гейт, поки не прийдуть реальні дані з таблиці.
+    // З кешем — жодного гейта, все миттєво з нього, свіжі дані тягнуться тихо.
+    // ОДИН запит (action=site тепер містить і кейси) замість двох паралельних —
+    // менше затримки на перше завантаження.
+    var hasCache = !!(cacheGet('site') && cacheGet('cases'));
+    if (!hasCache) showLoadingGate();
+    loadSite().then(function () {
+      // Захист на випадок, якщо бекенд ще не перерозгорнутий (стара версія
+      // action=site без кейсів у відповіді) — довантажуємо кейси окремо, щоб
+      // сітка не лишилася порожньою. На оновленому бекенді casesBooted вже
+      // true (кейси прийшли разом із site), тому цей виклик просто не робиться.
+      var extra = casesBooted ? null : loadCases();
+      return extra;
+    }).then(function () {
+      if (!hasCache) hideLoadingGate();
+    });
 
     if (LIMIT) wireScrollbar();
   }
@@ -752,11 +853,57 @@
     });
     document.getElementById('cc-back').addEventListener('click', screenChoose);
   }
+  /* ---------- Пароль адмінки ----------
+     Перевіряється на бекенді (action=check_password) — сам пароль ніколи не
+     потрапляє у відповідь сайту. Успішний вхід запам'ятовується в localStorage,
+     щоб не питати пароль щоразу на тому самому пристрої. */
+  var ADMIN_AUTH_KEY = 'cx_admin_authed_v1';
+  function isAdminAuthed() {
+    try { return localStorage.getItem(ADMIN_AUTH_KEY) === '1'; } catch (e) { return false; }
+  }
+  function adminAuthSet(v) {
+    try { if (v) localStorage.setItem(ADMIN_AUTH_KEY, '1'); else localStorage.removeItem(ADMIN_AUTH_KEY); } catch (e) {}
+  }
+  function screenPasswordGate() {
+    setTitle(T.passTitle, false);
+    body().innerHTML =
+      '<form class="cc-form" id="cc-gate-form" autocomplete="off">' +
+        '<div class="cc-grid">' +
+          '<div class="cc-field cc-field--full"><label>' + esc(T.passLabel) + '</label>' +
+            '<input type="password" name="password" autocomplete="off" autofocus /></div>' +
+        '</div>' +
+        '<div class="cc-form-actions">' +
+          '<button type="submit" class="cc-btn" id="cc-gate-submit">' + esc(T.passSubmit) + '</button>' +
+          '<span class="cc-status" id="cc-status"></span>' +
+        '</div>' +
+      '</form>';
+    var input = document.querySelector('#cc-gate-form input[name="password"]');
+    if (input) setTimeout(function () { input.focus(); }, 50);
+    document.getElementById('cc-gate-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var pass = input.value;
+      if (!pass) { setStatus(T.passNeed, 'err'); return; }
+      setStatus(T.saving, 'load');
+      var btn = document.getElementById('cc-gate-submit'); if (btn) btn.disabled = true;
+      jsonp({ action: 'check_password', password: pass }).then(function (res) {
+        if (btn) btn.disabled = false;
+        // Захист від застарілого/недеплоєного скрипта: якщо бекенд не знає дію
+        // check_password, він падає у дефолтну гілку 'list' і поверне {ok:true,
+        // items:[...]}. Справжня відповідь check_password НІКОЛИ не містить
+        // items — тому приймаємо успіх лише за її відсутності.
+        if (res && res.ok === true && !('items' in res)) {
+          adminAuthSet(true);
+          screenChoose();
+        } else setStatus(T.passWrong, 'err');
+      }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
+    });
+  }
   function openModal() {
     var m = document.getElementById('cc-modal');
     modalSession++; // нова «сесія» відкриття — щоб відкладене автозакриття від старої дії не закрило заново відкрите вікно
     m.classList.add('is-open'); m.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden'; document.body.classList.add('no-scroll'); screenChoose();
+    document.body.style.overflow = 'hidden'; document.body.classList.add('no-scroll');
+    if (isAdminAuthed()) screenChoose(); else screenPasswordGate();
   }
   function closeModal() {
     var m = document.getElementById('cc-modal');
@@ -808,6 +955,10 @@
           '<span class="cc-choose__ico">🖼</span>' +
           '<span class="cc-choose__txt"><b>' + esc(T.choosePhotos) + '</b><i>' + esc(T.choosePhotosSub) + '</i></span>' +
         '</button>' +
+        '<button type="button" class="cc-choose__item" id="cc-go-password">' +
+          '<span class="cc-choose__ico">🔒</span>' +
+          '<span class="cc-choose__txt"><b>' + esc(T.choosePassword) + '</b><i>' + esc(T.choosePasswordSub) + '</i></span>' +
+        '</button>' +
       '</div>';
     document.getElementById('cc-go-add').addEventListener('click', function () { screenForm(null); });
     document.getElementById('cc-go-edit').addEventListener('click', screenList);
@@ -817,6 +968,45 @@
     document.getElementById('cc-go-cats').addEventListener('click', screenCategories);
     document.getElementById('cc-go-services').addEventListener('click', screenServices);
     document.getElementById('cc-go-photos').addEventListener('click', screenPhotos);
+    document.getElementById('cc-go-password').addEventListener('click', screenPassword);
+  }
+
+  /* ---------- Екран: змінити пароль адмінки ---------- */
+  function screenPassword() {
+    setTitle(T.passScreenTitle, true);
+    body().innerHTML =
+      '<form class="cc-form" id="cc-pass-form" autocomplete="off">' +
+        '<div class="cc-grid">' +
+          '<div class="cc-field cc-field--full"><label>' + esc(T.passCurrent) + '</label>' +
+            '<input type="password" name="current_password" autocomplete="off" /></div>' +
+          '<div class="cc-field cc-field--half"><label>' + esc(T.passNew) + '</label>' +
+            '<input type="password" name="new_password" autocomplete="off" /></div>' +
+          '<div class="cc-field cc-field--half"><label>' + esc(T.passNewRepeat) + '</label>' +
+            '<input type="password" name="new_password2" autocomplete="off" /></div>' +
+        '</div>' +
+        '<div class="cc-form-actions">' +
+          '<button type="submit" class="cc-btn" id="cc-pass-submit">' + esc(T.save) + '</button>' +
+          '<span class="cc-status" id="cc-status"></span>' +
+        '</div>' +
+      '</form>';
+    document.getElementById('cc-pass-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var f = e.target;
+      var cur = f.elements['current_password'].value;
+      var next = f.elements['new_password'].value;
+      var next2 = f.elements['new_password2'].value;
+      if (!next || next !== next2) { setStatus(T.passMismatch, 'err'); return; }
+      setStatus(T.saving, 'load');
+      var btn = document.getElementById('cc-pass-submit'); if (btn) btn.disabled = true;
+      jsonp({ action: 'update_password', current_password: cur, new_password: next }).then(function (res) {
+        if (btn) btn.disabled = false;
+        if (res && res.ok) {
+          setStatus(T.passSaved, 'ok');
+          f.reset();
+          adminAuthSet(true); // новий пароль уже підтверджений цим введенням поточного
+        } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
+      }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
+    });
   }
 
   /* ---------- Екран: редагувати Hero (заголовок + опис) ---------- */
@@ -837,6 +1027,8 @@
       if (LANG === 'en' && k === 'lead_en') return domLead;
       return '';
     };
+    // Шоуріл не мовозалежний — uk/en однакові, беремо будь-яке заповнене поле.
+    var showreelVal = h.showreel_url_uk || h.showreel_url_en || '';
     body().innerHTML =
       '<form class="cc-form" id="cc-hero-form" autocomplete="off">' +
         '<div class="cc-grid">' +
@@ -849,6 +1041,9 @@
             '<textarea name="lead_uk" rows="3">' + esc(g('lead_uk')) + '</textarea></div>' +
           '<div class="cc-field cc-field--full"><label>' + esc(T.heroLeadEn) + '</label>' +
             '<textarea name="lead_en" rows="3">' + esc(g('lead_en')) + '</textarea></div>' +
+          '<div class="cc-field cc-field--full"><label>' + esc(T.showreelLabel) + '</label>' +
+            '<input type="text" name="showreel_url" value="' + esc(showreelVal) + '" placeholder="https://vimeo.com/… або https://youtu.be/…" />' +
+            '<div class="cc-vhint">' + esc(T.showreelHint) + '</div></div>' +
         '</div>' +
         '<div class="cc-form-actions">' +
           '<button type="submit" class="cc-btn" id="cc-hero-submit">' + esc(T.save) + '</button>' +
@@ -858,11 +1053,13 @@
     document.getElementById('cc-hero-form').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target;
+      var showreel = f.elements['showreel_url'].value.trim();
       var vals = {
         title_uk: f.elements['title_uk'].value.trim(),
         title_en: f.elements['title_en'].value.trim(),
         lead_uk: f.elements['lead_uk'].value.trim(),
-        lead_en: f.elements['lead_en'].value.trim()
+        lead_en: f.elements['lead_en'].value.trim(),
+        showreel_url_uk: showreel, showreel_url_en: showreel
       };
       setStatus(T.saving, 'load');
       var btn = document.getElementById('cc-hero-submit'); if (btn) btn.disabled = true;
@@ -876,6 +1073,7 @@
           SITE_HERO = SITE_HERO || {};
           Object.keys(vals).forEach(function (k) { SITE_HERO[k] = vals[k]; });
           applyHeroToPage();
+          syncSiteCache();
         } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
       }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
     });
@@ -1025,6 +1223,7 @@
           SITE_HERO.hero_photo_uk = heroUrl; SITE_HERO.hero_photo_en = heroUrl;
           SITE_HERO.about_photo_uk = aboutUrl; SITE_HERO.about_photo_en = aboutUrl;
           applyHeroToPage();
+          syncSiteCache();
         } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
       }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
     });
@@ -1062,6 +1261,7 @@
           setStatus(T.settingsSaved, 'ok');
           CATEGORIES = (res.categories && res.categories.length) ? res.categories.slice() : out;
           renderFilters(); renderCases(); renderHeroList();
+          syncSiteCache();
         } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
       }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
     });
@@ -1211,6 +1411,7 @@
         SITE_HERO['services_title_uk'] = heroParams.services_title_uk; SITE_HERO['services_title_en'] = heroParams.services_title_en;
         SITE_SERVICES = (res.services && res.services.length) ? res.services.slice() : cards;
         applyServicesHead(); renderServicesCards();
+        syncSiteCache();
       } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
     }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
   }
@@ -1246,6 +1447,7 @@
           setStatus(T.settingsSaved, 'ok');
           SITE_ABOUT = { uk: text_uk, en: text_en };
           applyAboutToPage();
+          syncSiteCache();
         } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
       }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
     });
@@ -1293,6 +1495,7 @@
           setStatus(T.settingsSaved, 'ok');
           SITE_CONTACTS = vals;
           applyContactsToPage();
+          syncSiteCache();
         } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
       }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
     });
@@ -1350,7 +1553,13 @@
             '<div class="cc-videos" id="cc-videos"></div>' +
             '<button type="button" class="cc-addvid" id="cc-addvid">+ ' + esc(T.addVideo) + '</button>' +
           '</div>' +
-          '<div class="cc-field cc-field--half"><label>' + T.category + '</label><select name="category">' + catOpts + '</select></div>' +
+          // Якщо категорії ще не завантажилися (рідкісний офлайн-випадок) — текстове
+          // поле замість select, щоб форма не була заблокована повністю.
+          '<div class="cc-field cc-field--half"><label>' + T.category + '</label>' +
+            (CATEGORIES.length
+              ? '<select name="category">' + catOpts + '</select>'
+              : '<input type="text" name="category" value="' + esc(g('category')) + '" placeholder="Commercial" />') +
+          '</div>' +
           inp('year', T.year, g('year'), false, 'half', '2024') +
           inp('placement', T.placement, g('placement'), false, 'full', T.placementPh) +
           area('desc_uk', T.descUk, g('desc_uk'), 'half') +
@@ -1550,32 +1759,85 @@
   }
 
   /* ---------------- Рендер сітки ---------------- */
+  // Кеш застосовуємо миттєво лише на САМЕ ПЕРШЕ завантаження сторінки (щоб не
+  // було «мигання» до відповіді таблиці). При повторних викликах (після
+  // додавання/редагування/видалення кейсу, збереження hero тощо) кеш більше НЕ
+  // застосовуємо — інакше стара кешована відповідь могла б на мить перекрити
+  // щойно оновлені дані ще до того, як прийде свіжа відповідь з таблиці.
+  var casesBooted = false;
+  var siteBooted = false;
+  // Захист від «гонки»: loadCases() може бути викликаний повторно (напр. одразу
+  // після додавання кейсу), поки попередній виклик ще очікує відповідь. Якщо
+  // старіша відповідь приходить ПІЗНІШЕ новішої — вона ігнорується за номером.
+  var casesReqSeq = 0;
   function loadCases() {
+    var cached = null;
+    if (!casesBooted) {
+      casesBooted = true;
+      cached = cacheGet('cases');
+      if (cached && cached.items) { ALL = cached.items; renderFilters(); renderCases(); }
+    }
+    var mySeq = ++casesReqSeq;
     return jsonp({ action: 'list' }).then(function (res) {
+      if (mySeq !== casesReqSeq) return; // застаріла відповідь — ігноруємо
       // Бекенд відповів — ALL = реальні кейси (для адмінки). Демо-набір не показуємо.
       backendFailed = false;
       ALL = (res && res.items) ? res.items : [];
       renderFilters(); renderCases();
+      cacheSet('cases', { items: ALL });
     }).catch(function () {
-      // Немає звʼязку з бекендом — показуємо демо-набір, сітка виглядає готовою.
+      if (mySeq !== casesReqSeq) return;
+      // Немає звʼязку з бекендом. Якщо є кеш — лишаємо його на екрані (вже показано
+      // вище), інакше показуємо демо-набір, щоб сітка виглядала готовою.
+      if (cached && cached.items) return;
       backendFailed = true;
       ALL = [];
       renderFilters(); renderCases();
     });
   }
   /* ---------------- "Про нас" + Контакти (Google Таблиця) ---------------- */
+  // Після кожного успішного збереження в адмінці (about/contacts/hero/categories/
+  // services) оновлюємо кеш 'site' поточним станом у пам'яті — щоб localStorage
+  // одразу відображав щойно збережені дані, а не чекав наступного фонового fetch.
+  function syncSiteCache() {
+    cacheSet('site', {
+      ok: true,
+      about: SITE_ABOUT,
+      contacts: SITE_CONTACTS,
+      hero: SITE_HERO,
+      categories: CATEGORIES,
+      services: SITE_SERVICES,
+      cases: ALL
+    });
+  }
+  function applySiteData(res) {
+    if (!res || !res.ok) return;
+    if (res.about) { SITE_ABOUT = res.about; applyAboutToPage(); }
+    if (res.contacts) { SITE_CONTACTS = res.contacts; applyContactsToPage(); }
+    if (res.hero) { SITE_HERO = res.hero; applyHeroToPage(); applyServicesHead(); }
+    if (res.categories && res.categories.length) CATEGORIES = res.categories.slice();
+    if (res.services && res.services.length) { SITE_SERVICES = res.services.slice(); renderServicesCards(); }
+    // getSite_() тепер повертає й кейси (action=site = ОДИН запит замість двох
+    // окремих — швидше перше завантаження). Масив може бути й порожнім (реально
+    // немає кейсів) — тому перевіряємо саме isArray, а не .length.
+    if (Array.isArray(res.cases)) {
+      casesBooted = true; backendFailed = false;
+      ALL = res.cases;
+      cacheSet('cases', { items: ALL });
+    }
+    renderFilters(); renderCases(); renderHeroList();
+  }
   function loadSite() {
+    var cached = null;
+    if (!siteBooted) {
+      siteBooted = true;
+      cached = cacheGet('site');
+      if (cached) applySiteData(cached);
+    }
     return jsonp({ action: 'site' }).then(function (res) {
-      if (!res || !res.ok) return;
-      if (res.about) { SITE_ABOUT = res.about; applyAboutToPage(); }
-      if (res.contacts) { SITE_CONTACTS = res.contacts; applyContactsToPage(); }
-      if (res.hero) { SITE_HERO = res.hero; applyHeroToPage(); applyServicesHead(); }
-      if (res.categories && res.categories.length) {
-        CATEGORIES = res.categories.slice();
-        renderFilters(); renderCases(); renderHeroList();
-      }
-      if (res.services && res.services.length) { SITE_SERVICES = res.services.slice(); renderServicesCards(); }
-    }).catch(function () { /* лишаємо статичний текст із HTML — це нормальний fallback */ });
+      applySiteData(res);
+      if (res && res.ok) cacheSet('site', res);
+    }).catch(function () { /* лишаємо кеш або статичний текст із HTML — нормальний fallback */ });
   }
 
   /* ---------------- Hero: заголовок + опис + список напрямків ---------------- */
@@ -1601,6 +1863,13 @@
     }
     var aboutImgEl = document.getElementById('cx-about-img');
     if (aboutPhoto && aboutImgEl) aboutImgEl.src = aboutPhoto;
+    // Кнопка «Дивитись шоуріл» у hero — посилання на відео теж з таблиці.
+    var showreelUrl = pick(SITE_HERO, 'showreel_url_uk', 'showreel_url_en');
+    if (showreelUrl) {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-video]'), function (btn) {
+        btn.setAttribute('data-video', showreelUrl);
+      });
+    }
   }
   // Рендер списку напрямків у hero (справа). Показуємо НЕ БІЛЬШЕ 5 пунктів —
   // щоб при великій кількості категорій список не «плив» і не ламав макет;

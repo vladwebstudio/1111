@@ -19,6 +19,32 @@ body.cx {
   overflow-x: hidden;
 }
 body.cx.no-scroll { overflow: hidden; }
+
+/* ---------- Loading-гейт (лише перший візит, поки немає кешу) ---------- */
+.cx-gate {
+  position: fixed; inset: 0; z-index: 100000; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 18px;
+  background: #0a0a0a; opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .35s ease, visibility .35s;
+}
+.cx-gate.is-visible { opacity: 1; visibility: visible; pointer-events: auto; }
+.cx-gate__pct {
+  font-family: 'Archivo', sans-serif; font-weight: 900; font-size: clamp(40px, 8vw, 64px);
+  color: #fff; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+.cx-gate__track {
+  width: min(280px, 70vw); height: 4px; border-radius: 4px; background: #1c1c1c; overflow: hidden;
+}
+.cx-gate__bar {
+  height: 100%; width: 0%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--red, #e0201f), var(--red-bright, #ff3b3b));
+  transition: width .12s linear;
+}
+.cx-gate__msg {
+  font-family: 'Archivo', sans-serif; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .5px; font-size: 13px; color: #8a8a8a; margin-top: 4px;
+}
+.cx-gate__sub { font-size: 12px; color: #6a6a6a; text-align: center; max-width: 320px; padding: 0 20px; }
 .cx img { max-width: 100%; display: block; }
 .cx a { color: inherit; text-decoration: none; }
 .cx ul { list-style: none; margin: 0; padding: 0; }

@@ -37,10 +37,12 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://script.google.com" />
+    <link rel="preconnect" href="https://script.googleusercontent.com" />
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-    <link href="include/css/contrabas-redesign.css?v=27" rel="stylesheet" />
-    <link href="include/css/contrabas-cases.css?v=27" rel="stylesheet" />
+    <link href="include/css/contrabas-redesign.css?v=34" rel="stylesheet" />
+    <link href="include/css/contrabas-cases.css?v=34" rel="stylesheet" />
 
     <script type="application/ld+json">
     {
@@ -70,6 +72,14 @@
     </script>
 </head>
 <body class="cx">
+
+<!-- Loading gate: only on the very first visit (no cache yet), blocks the site until the sheet responds -->
+<div class="cx-gate" id="cx-gate">
+    <div class="cx-gate__pct" id="cx-gate-pct">0%</div>
+    <div class="cx-gate__track"><div class="cx-gate__bar" id="cx-gate-bar"></div></div>
+    <div class="cx-gate__msg" id="cx-gate-msg"></div>
+    <div class="cx-gate__sub" id="cx-gate-sub"></div>
+</div>
 
 <!-- ============ HEADER ============ -->
 <header class="cx-header" id="cx-header">
@@ -110,28 +120,24 @@
 <!-- ============ HERO ============ -->
 <section class="cx-hero" id="top">
     <div class="cx-hero__media">
-        <video id="cx-hero-video" autoplay muted loop playsinline poster="include/img/photo_slider/photos6/SIM_5601.jpg"></video>
-        <img id="cx-hero-img" src="include/img/photo_slider/photos6/SIM_5601.jpg" alt="Contrabas — on set" />
+        <video id="cx-hero-video" autoplay muted loop playsinline></video>
+        <!-- Photo comes from the Google Sheet (hero_photo_*) via JS. -->
+        <img id="cx-hero-img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="Contrabas — on set" />
     </div>
 
     <div class="cx-hero__inner">
         <div class="cx-hero__main">
             <span class="cx-eyebrow cx-reveal">We create attention</span>
-            <h1 class="cx-hero__title cx-display cx-reveal" id="cx-hero-title" data-delay="1">Creative<br>Production<br><span class="accent">for</span> Brands</h1>
-            <p class="cx-hero__lead cx-reveal" id="cx-hero-lead" data-delay="2">We create video and content that grabs attention, strengthens brands and drives results.</p>
+            <h1 class="cx-hero__title cx-display cx-reveal" id="cx-hero-title" data-delay="1"></h1>
+            <p class="cx-hero__lead cx-reveal" id="cx-hero-lead" data-delay="2"></p>
             <div class="cx-hero__actions cx-reveal" data-delay="3">
                 <a href="#work" class="cx-btn cx-btn--solid cx-btn--lg" data-video="https://vimeo.com/784082737">Watch Showreel <span class="cx-btn__arw">→</span></a>
                 <a href="#contact" class="cx-btn cx-btn--lg">Contact</a>
             </div>
         </div>
 
-        <ul class="cx-hero__list cx-reveal" id="cx-hero-list" data-delay="2">
-            <li><a href="#work" data-filter="Commercial"><span>Commercial</span><span class="num">01</span></a></li>
-            <li><a href="#work" data-filter="Social Content"><span>Social Content</span><span class="num">02</span></a></li>
-            <li><a href="#work" data-filter="Podcasts"><span>Podcasts</span><span class="num">03</span></a></li>
-            <li><a href="#work" data-filter="YouTube"><span>YouTube</span><span class="num">04</span></a></li>
-            <li><a href="#work" data-filter="Documentary"><span>Documentary</span><span class="num">05</span></a></li>
-        </ul>
+        <!-- List of directions is built from the Google Sheet categories (renderHeroList). -->
+        <ul class="cx-hero__list cx-reveal" id="cx-hero-list" data-delay="2"></ul>
     </div>
 
     <div class="cx-hero__scroll">
@@ -145,41 +151,12 @@
     <div class="cx-container">
         <div class="cx-services__grid">
             <div class="cx-services__intro cx-reveal">
-                <span class="cx-eyebrow" id="cx-services-eyebrow">What we do</span>
-                <h2 class="cx-section-title" id="cx-services-title">Full-service<br>video production<br>&amp; content</h2>
+                <span class="cx-eyebrow" id="cx-services-eyebrow"></span>
+                <h2 class="cx-section-title" id="cx-services-title"></h2>
             </div>
 
-            <div class="cx-services__cards" id="cx-services-cards">
-                <div class="cx-service cx-reveal" data-delay="1">
-                    <div class="cx-service__ico">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 10.2h17v8.3a1 1 0 01-1 1h-15a1 1 0 01-1-1v-8.3z"/><path d="M3.7 10.2l1.2-4.4a1 1 0 011-.75h12.2a1 1 0 011 .75l1.2 4.4M6.8 5.3l3.2 4.9M11.4 5.1l3.2 4.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>
-                    <span class="cx-service__tag">Commercial</span>
-                    <h3>Production</h3>
-                    <p>Commercials, brand films, corporate video and other cinematic projects of any complexity.</p>
-                    <a href="#work" class="cx-service__more" data-filter="Commercial">View work</a>
-                </div>
-
-                <div class="cx-service cx-reveal" data-delay="2">
-                    <div class="cx-service__ico">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M10.7 19h2.6" stroke-linecap="round"/><path d="M10.3 8.8l4.2 2.7-4.2 2.7z" stroke-linejoin="round"/></svg>
-                    </div>
-                    <span class="cx-service__tag">Social Content</span>
-                    <h3>Content Studio</h3>
-                    <p>Vertical content, Reels, TikTok, YouTube, podcasts and turnkey content for social media and ad campaigns.</p>
-                    <a href="#work" class="cx-service__more" data-filter="Social Content">View work</a>
-                </div>
-
-                <div class="cx-service cx-reveal" data-delay="3">
-                    <div class="cx-service__ico">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2.6a6.4 6.4 0 00-3.7 11.6c.6.4 1 1.1 1 1.9v.4h5.4v-.4c0-.8.4-1.5 1-1.9A6.4 6.4 0 0012 2.6z"/><path d="M9.3 19.5h5.4M10.2 21.4h3.6" stroke-linecap="round"/><path d="M12 6.3v3.4M9.3 10.9l1.9 1.9M14.7 10.9l-1.9 1.9" stroke-linecap="round"/></svg>
-                    </div>
-                    <span class="cx-service__tag">Creative</span>
-                    <h3>Creative</h3>
-                    <p>Creative ideas, scripts, storytelling and campaign concepts that help brands stand out.</p>
-                    <a href="#work" class="cx-service__more" data-filter="all">View work</a>
-                </div>
-            </div>
+            <!-- Cards are built from the Google Sheet (renderServicesCards). -->
+            <div class="cx-services__cards" id="cx-services-cards"></div>
         </div>
     </div>
 </section>
@@ -200,12 +177,11 @@
         </div>
         <div class="cx-about__grid">
             <div class="cx-about__img cx-reveal">
-                <img id="cx-about-img" src="include/img/about/team-pavilion.jpg" alt="The Contrabas team on set" />
+                <!-- Photo comes from the Google Sheet (about_photo_*) via JS. -->
+                <img id="cx-about-img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="The Contrabas team on set" />
             </div>
-            <div class="cx-about__body cx-reveal" data-delay="1" id="cx-about-text">
-                <p>We are a team of professionals in love with video and with what we do. We create strong visual stories for brands and companies in Ukraine and beyond.</p>
-                <p>In 2024 our studio was destroyed by a russian attack. We lost the space, but not the team or the desire to create strong projects. Contrabas is about resilience, creativity and people who do more than expected.</p>
-            </div>
+            <!-- Text comes from the Google Sheet (applyAboutToPage). -->
+            <div class="cx-about__body cx-reveal" data-delay="1" id="cx-about-text"></div>
             <div class="cx-stats cx-reveal" data-delay="2">
                 <div class="cx-stat">
                     <div class="cx-stat__num" data-count="10">0<span class="plus">+</span></div>
@@ -274,21 +250,21 @@
             <div class="cx-footer__cols">
                 <div class="cx-footer__col">
                     <b>Production</b>
-                    <a href="tel:+380962836900" id="cx-footer-phone">+38 096 283 69 00</a>
-                    <span id="cx-footer-manager">Ruslan Teslenko</span>
-                    <a href="mailto:contrabasvideo@gmail.com" id="cx-footer-email">contrabasvideo@gmail.com</a>
+                    <a href="tel:" id="cx-footer-phone"></a>
+                    <span id="cx-footer-manager"></span>
+                    <a href="mailto:" id="cx-footer-email"></a>
                 </div>
                 <div class="cx-footer__col">
                     <b>Office</b>
-                    <span id="cx-footer-address1">Dnipro, Televiziina St, 3, Ukraine, 49010</span>
+                    <span id="cx-footer-address1"></span>
                 </div>
                 <div class="cx-footer__col">
                     <b>Social</b>
-                    <a id="cx-footer-s-telegram" class="cx-footer__social" href="https://t.me/contrabasvideo" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M9.8 15.6l-.4 4.1c.5 0 .8-.2 1.1-.5l2-1.9 4.1 3c.8.4 1.3.2 1.5-.7l2.7-12.6c.2-1-.4-1.4-1-1.2L3.6 10.4c-1 .4-1 .9-.2 1.2l4.3 1.3 9.9-6.2c.5-.3.9-.1.5.2z"/></svg>Telegram</a>
-                    <a id="cx-footer-s-instagram" class="cx-footer__social" href="https://www.instagram.com/contrabas__video/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm6.8-11.2a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>Instagram</a>
-                    <a id="cx-footer-s-youtube" class="cx-footer__social" href="https://www.youtube.com/channel/UCswZGoXj28dcmqR9uB-xR-Q" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M23 7.5a3 3 0 00-2.1-2.1C19 4.9 12 4.9 12 4.9s-7 0-8.9.5A3 3 0 001 7.5 31 31 0 00.5 12 31 31 0 001 16.5a3 3 0 002.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 002.1-2.1A31 31 0 0023.5 12 31 31 0 0023 7.5zM9.7 15.5v-7l6.1 3.5-6.1 3.5z"/></svg>YouTube</a>
-                    <a id="cx-footer-s-vimeo" class="cx-footer__social" href="https://vimeo.com/user38440932" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M22 7.4c-.1 2.1-1.6 5-4.4 8.7-2.9 3.8-5.4 5.8-7.4 5.8-1.3 0-2.3-1.1-3.2-3.4L5.3 12c-.6-2.3-1.3-3.4-2-3.4-.2 0-.7.3-1.7 1L.5 8.3c1.1-1 2.2-2 3.3-3C5.3 4.1 6.4 3.5 7 3.4c1.6-.2 2.6.9 3 3.3.4 2.6.7 4.2.9 4.8.5 2.3 1 3.4 1.7 3.4.5 0 1.2-.8 2.2-2.4 1-1.6 1.5-2.8 1.6-3.6.1-1.2-.4-1.8-1.6-1.8-.5 0-1.1.1-1.7.4 1.1-3.6 3.2-5.3 6.3-5.2 2.3.1 3.4 1.6 3.3 4.5z"/></svg>Vimeo</a>
-                    <a id="cx-footer-s-facebook" class="cx-footer__social" href="https://www.facebook.com/contrabas.video.prod" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V7.9c0-.9.3-1.5 1.6-1.5h1.6V3.6c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.3H7.8V13h2.7v8h3z"/></svg>Facebook</a>
+                    <a id="cx-footer-s-telegram" class="cx-footer__social" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M9.8 15.6l-.4 4.1c.5 0 .8-.2 1.1-.5l2-1.9 4.1 3c.8.4 1.3.2 1.5-.7l2.7-12.6c.2-1-.4-1.4-1-1.2L3.6 10.4c-1 .4-1 .9-.2 1.2l4.3 1.3 9.9-6.2c.5-.3.9-.1.5.2z"/></svg>Telegram</a>
+                    <a id="cx-footer-s-instagram" class="cx-footer__social" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm6.8-11.2a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>Instagram</a>
+                    <a id="cx-footer-s-youtube" class="cx-footer__social" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M23 7.5a3 3 0 00-2.1-2.1C19 4.9 12 4.9 12 4.9s-7 0-8.9.5A3 3 0 001 7.5 31 31 0 00.5 12 31 31 0 001 16.5a3 3 0 002.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 002.1-2.1A31 31 0 0023.5 12 31 31 0 0023 7.5zM9.7 15.5v-7l6.1 3.5-6.1 3.5z"/></svg>YouTube</a>
+                    <a id="cx-footer-s-vimeo" class="cx-footer__social" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M22 7.4c-.1 2.1-1.6 5-4.4 8.7-2.9 3.8-5.4 5.8-7.4 5.8-1.3 0-2.3-1.1-3.2-3.4L5.3 12c-.6-2.3-1.3-3.4-2-3.4-.2 0-.7.3-1.7 1L.5 8.3c1.1-1 2.2-2 3.3-3C5.3 4.1 6.4 3.5 7 3.4c1.6-.2 2.6.9 3 3.3.4 2.6.7 4.2.9 4.8.5 2.3 1 3.4 1.7 3.4.5 0 1.2-.8 2.2-2.4 1-1.6 1.5-2.8 1.6-3.6.1-1.2-.4-1.8-1.6-1.8-.5 0-1.1.1-1.7.4 1.1-3.6 3.2-5.3 6.3-5.2 2.3.1 3.4 1.6 3.3 4.5z"/></svg>Vimeo</a>
+                    <a id="cx-footer-s-facebook" class="cx-footer__social" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V7.9c0-.9.3-1.5 1.6-1.5h1.6V3.6c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.3H7.8V13h2.7v8h3z"/></svg>Facebook</a>
                 </div>
             </div>
         </div>
@@ -332,7 +308,7 @@
     </div>
 </div>
 
-<script src="include/js/contrabas-redesign.js?v=27"></script>
-<script src="include/js/contrabas-cases.js?v=27"></script>
+<script src="include/js/contrabas-redesign.js?v=34"></script>
+<script src="include/js/contrabas-cases.js?v=34"></script>
 </body>
 </html>

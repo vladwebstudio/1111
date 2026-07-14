@@ -42,7 +42,12 @@ var SHEET_LEADS      = 'leads';
 var SHEET_HERO       = 'hero';        // заголовок/опис hero + заголовок секції «Що ми робимо»
 var SHEET_CATEGORIES = 'categories';  // список категорій проєктів (керує hero + фільтрами)
 var SHEET_SERVICES   = 'services';    // картки секції «Що ми робимо» (тег/назва/опис/фільтр)
+var SHEET_SETTINGS   = 'settings';    // службові налаштування (пароль адмінки)
 var IMAGES_FOLDER    = 'Contrabas site images'; // папка на Google Drive для завантажених фото (hero/про нас)
+
+// Заявки з форми «Обговорити проєкт» ЗАВЖДИ дублюються на цю пошту (незалежно
+// від того, яка пошта показана публічно на сайті в блоці «Контакти»).
+var ADMIN_NOTIFY_EMAIL = 'vladpetrenko66@gmail.com';
 
 var HEADERS = ['id','created_at','name_uk','name_en','category','year','placement',
                'provider','video_id','video_url','thumb','desc_uk','desc_en','reels'];
@@ -55,6 +60,8 @@ var LEADS_HEADERS      = ['created_at','name','contact','message','lang','page']
 var HERO_HEADERS       = ['key','value_uk','value_en'];
 var CATEGORIES_HEADERS = ['name'];
 var SERVICES_HEADERS   = ['tag_uk','tag_en','name_uk','name_en','desc_uk','desc_en','filter'];
+var SETTINGS_HEADERS   = ['key','value'];
+var ADMIN_PASSWORD_DEFAULT = '1111';
 
 /* Ключі листа `hero` (key/value_uk/value_en). Крім hero-заголовка й опису тут
    лежить і заголовок секції «Що ми робимо» (services_eyebrow / services_title). */
@@ -67,7 +74,10 @@ var HERO_KEYS = {
   // URL фотографій hero-фону та секції «Про нас». Порожньо = лишається дефолтне фото
   // з HTML (сайт нічого не перезаписує, поки в таблиці немає значення).
   hero_photo:       { uk: '', en: '' },
-  about_photo:      { uk: '', en: '' }
+  about_photo:      { uk: '', en: '' },
+  // Посилання на відео кнопки «Дивитись шоуріл» у hero (Vimeo/YouTube). uk/en
+  // однакові — відео не залежить від мови.
+  showreel_url:     { uk: 'https://vimeo.com/784082737', en: 'https://vimeo.com/784082737' }
 };
 
 /* Стартовий список категорій (як у ТЗ). Далі керується з адмінпанелі/таблиці. */
@@ -136,6 +146,8 @@ function handle_(e) {
     else if (action === 'update_categories') out = updateCategories_(p);
     else if (action === 'update_services')   out = updateServices_(p);
     else if (action === 'upload_image')      out = uploadImage_(p);
+    else if (action === 'check_password')    out = checkPassword_(p);
+    else if (action === 'update_password')   out = updatePassword_(p);
     else                                     out = { ok: true, items: listCases_() };
   } catch (err) {
     out = { ok: false, error: String(err && err.message ? err.message : err) };
@@ -508,7 +520,43 @@ function updateServices_(p) {
   return { ok: true, services: clean };
 }
 
-/* Усі блоки одразу — сайт запитує їх одним викликом при завантаженні. */
+/* ============================================================
+   ПАРОЛЬ АДМІНКИ (settings) — один рядок key='admin_password'.
+   Пароль НІКОЛИ не повертається в жодній відповіді (навіть у getSite_) —
+   лише перевіряється на бекенді за дією check_password, щоб його не було
+   видно через мережеву вкладку браузера.
+   ============================================================ */
+function getAdminPasswordRow_() {
+  var sh = getOrCreateSheet_(SHEET_SETTINGS, SETTINGS_HEADERS);
+  var last = sh.getLastRow();
+  if (last >= 2) {
+    var data = sh.getRange(2, 1, last - 1, 2).getValues();
+    for (var i = 0; i < data.length; i++) {
+      if (String(data[i][0]).trim() === 'admin_password') return { sh: sh, rowNum: i + 2, value: String(data[i][1]) };
+    }
+  }
+  sh.appendRow(['admin_password', ADMIN_PASSWORD_DEFAULT]);
+  return { sh: sh, rowNum: sh.getLastRow(), value: ADMIN_PASSWORD_DEFAULT };
+}
+
+function checkPassword_(p) {
+  var cur = getAdminPasswordRow_().value || ADMIN_PASSWORD_DEFAULT;
+  var ok = String(p.password || '') === cur;
+  return { ok: ok };
+}
+
+function updatePassword_(p) {
+  var row = getAdminPasswordRow_();
+  var cur = row.value || ADMIN_PASSWORD_DEFAULT;
+  if (String(p.current_password || '') !== cur) return { ok: false, error: 'Поточний пароль невірний' };
+  var next = String(p.new_password || '').trim();
+  if (!next) return { ok: false, error: 'Новий пароль порожній' };
+  row.sh.getRange(row.rowNum, 2).setValue(next);
+  return { ok: true };
+}
+
+/* Усі блоки одразу (включно з кейсами!) — сайт при першому завантаженні робить
+   ОДИН виклик замість двох (site + list) — так швидше, менше затримки. */
 function getSite_() {
   return {
     ok: true,
@@ -516,7 +564,8 @@ function getSite_() {
     contacts: getContacts_(),
     hero: getHero_(),
     categories: getCategories_(),
-    services: getServices_()
+    services: getServices_(),
+    cases: listCases_()
   };
 }
 
@@ -568,21 +617,23 @@ function updateCategories_(p) {
 function addLead_(p) {
   var sh = getOrCreateSheet_(SHEET_LEADS, LEADS_HEADERS);
   sh.appendRow([new Date(), p.name || '', p.contact || p.email || '', p.message || '', p.lang || '', p.page || '']);
-  // Лист-сповіщення на пошту з таблиці «contacts» (не критично, якщо не надішлеться).
+  // Лист-сповіщення. ЗАВЖДИ йде на ADMIN_NOTIFY_EMAIL (фіксована пошта власника),
+  // + додатково на публічну пошту з таблиці «contacts», якщо вона інша.
   try {
+    var body = 'Ім\'я: ' + (p.name || '') + '\n' +
+               'Контакт: ' + (p.contact || p.email || '') + '\n' +
+               'Повідомлення: ' + (p.message || '') + '\n' +
+               'Мова: ' + (p.lang || '') + '\n' +
+               'Сторінка: ' + (p.page || '');
+    var recipients = [ADMIN_NOTIFY_EMAIL];
     var contacts = getContacts_();
-    var to = contacts.email || CONTACTS_DEFAULTS.email;
-    if (to) {
-      MailApp.sendEmail({
-        to: to,
-        subject: 'Нова заявка з сайту Contrabas',
-        body: 'Ім\'я: ' + (p.name || '') + '\n' +
-              'Контакт: ' + (p.contact || p.email || '') + '\n' +
-              'Повідомлення: ' + (p.message || '') + '\n' +
-              'Мова: ' + (p.lang || '') + '\n' +
-              'Сторінка: ' + (p.page || '')
-      });
-    }
+    var publicEmail = contacts.email || CONTACTS_DEFAULTS.email;
+    if (publicEmail && publicEmail.toLowerCase() !== ADMIN_NOTIFY_EMAIL.toLowerCase()) recipients.push(publicEmail);
+    MailApp.sendEmail({
+      to: recipients.join(','),
+      subject: 'Нова заявка з сайту Contrabas',
+      body: body
+    });
   } catch (mailErr) { /* тихо ігноруємо — заявка вже збережена в таблиці */ }
   return { ok: true };
 }
