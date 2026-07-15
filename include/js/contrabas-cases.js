@@ -52,8 +52,13 @@
     gateSetPct(0);
     if (gateTimer) clearInterval(gateTimer);
     gateTimer = setInterval(function () {
+      // Жорсткий стоп на 92% — БЕЗ цього крок нижче (Math.max(0.5, …)) ніколи
+      // не стає нулем і продовжує додавати мінімум 0.5% на кожен тик і після
+      // 92%, тому при повільній мережі лічильник ліз за 100/120/150% і вище.
+      // Далі — лише 100% на реальній відповіді (hideLoadingGate).
+      if (gatePct >= 92) return;
       var remaining = 92 - gatePct;
-      gateSetPct(gatePct + Math.max(0.5, remaining * 0.09));
+      gateSetPct(Math.min(92, gatePct + Math.max(0.5, remaining * 0.09)));
     }, 70);
     g.classList.add('is-visible');
     document.body.classList.add('no-scroll');

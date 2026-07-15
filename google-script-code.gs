@@ -535,8 +535,13 @@ function getAdminPasswordRow_() {
       if (String(data[i][0]).trim() === 'admin_password') return { sh: sh, rowNum: i + 2, value: String(data[i][1]) };
     }
   }
-  sh.appendRow(['admin_password', ADMIN_PASSWORD_DEFAULT]);
-  return { sh: sh, rowNum: sh.getLastRow(), value: ADMIN_PASSWORD_DEFAULT };
+  var rowNum = sh.getLastRow() + 1;
+  // Стовпець B — примусово ТЕКСТ. Без цього Google Таблиця сама перетворює
+  // цифровий пароль (напр. "0000") на число 0, губимо ведучі нулі — і пароль
+  // перестає збігатися.
+  sh.getRange(rowNum, 2).setNumberFormat('@');
+  sh.getRange(rowNum, 1, 1, 2).setValues([['admin_password', ADMIN_PASSWORD_DEFAULT]]);
+  return { sh: sh, rowNum: rowNum, value: ADMIN_PASSWORD_DEFAULT };
 }
 
 function checkPassword_(p) {
@@ -551,7 +556,8 @@ function updatePassword_(p) {
   if (String(p.current_password || '') !== cur) return { ok: false, error: 'Поточний пароль невірний' };
   var next = String(p.new_password || '').trim();
   if (!next) return { ok: false, error: 'Новий пароль порожній' };
-  row.sh.getRange(row.rowNum, 2).setValue(next);
+  // Примусово текстовий формат перед записом — щоб "0000" тощо не ставало числом.
+  row.sh.getRange(row.rowNum, 2).setNumberFormat('@').setValue(next);
   return { ok: true };
 }
 

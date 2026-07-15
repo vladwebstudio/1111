@@ -31,6 +31,26 @@
   function $(s, c) { return (c || document).querySelector(s); }
   function $all(s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); }
 
+  /* ---------- Стала висота hero (--cx-vh), незалежна від vh/svh/dvh ----------
+     У вбудованих браузерах (Telegram in-app тощо) власна «шторка» додатка
+     згортається/розгортається під час скролу так само, як адресний рядок у
+     Safari/Chrome, і будь-яка динамічна одиниця висоти (vh/svh/dvh) через це
+     перераховується в реальному часі — фон hero візуально «стрибає»/масштабується.
+     Тому міряємо висоту ОДИН РАЗ через JS і фіксуємо як px — вона більше не
+     змінюється під час скролу, лише за СПРАВЖНЬОЇ зміни розміру (обертання
+     екрана: тоді і ширина теж змінюється — за цим і відрізняємо від шторки). */
+  var _lastVW = window.innerWidth;
+  function setHeroVH() {
+    document.documentElement.style.setProperty('--cx-vh', window.innerHeight + 'px');
+  }
+  setHeroVH();
+  window.addEventListener('resize', function () {
+    if (window.innerWidth !== _lastVW) { _lastVW = window.innerWidth; setHeroVH(); }
+  }, { passive: true });
+  window.addEventListener('orientationchange', function () {
+    setTimeout(setHeroVH, 200);
+  });
+
   document.addEventListener('DOMContentLoaded', init);
 
   function init() {
@@ -201,8 +221,9 @@
   function contactForm() {
     wireForm($('#cx-form'), $('#cx-form-status'));
     wireForm($('#cx-lead-form'), $('#cx-lead-status'), function () {
-      // після успіху в модалці — закрити її трохи згодом
-      setTimeout(closeLead, 1600);
+      // Модалка НЕ закривається сама — показуємо екран «Дякуємо», користувач
+      // закриває сам (хрестиком/фоном/Escape/кнопкою «Закрити»).
+      showLeadThanks();
     });
   }
   function wireForm(form, status, onSuccess) {
@@ -267,6 +288,23 @@
     _leadModalEl.classList.remove('is-open');
     _leadModalEl.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('no-scroll');
+    // Скидаємо на форму ЛИШЕ після того, як модалка вже сховалася (transition),
+    // щоб користувач не побачив «стрибок» назад на форму під час закриття.
+    setTimeout(resetLeadView, 350);
+  }
+  function showLeadThanks() {
+    var formView = $('#cx-lead-form-view');
+    var thanksView = $('#cx-lead-thanks-view');
+    if (formView) formView.hidden = true;
+    if (thanksView) thanksView.hidden = false;
+  }
+  function resetLeadView() {
+    var formView = $('#cx-lead-form-view');
+    var thanksView = $('#cx-lead-thanks-view');
+    if (thanksView) thanksView.hidden = true;
+    if (formView) formView.hidden = false;
+    var status = $('#cx-lead-status');
+    if (status) { status.textContent = ''; status.className = 'cx-form__status'; }
   }
 
   /* ---------- Лінки «Що ми робимо» / hero → фільтр портфоліо ---------- */

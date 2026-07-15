@@ -32,8 +32,8 @@
     <meta name="twitter:description" content="Commercial video production, social content, YouTube, podcasts and producing." />
     <meta name="twitter:image" content="https://contrabasvideo.com.ua/contrabasvideo2.png" />
 
-    <link rel="shortcut icon" href="include/img/favicon.png" />
-    <link rel="apple-touch-icon" href="include/img/favicon.png" />
+    <link rel="shortcut icon" href="include/img/favicon.png?v=40" />
+    <link rel="apple-touch-icon" href="include/img/favicon.png?v=40" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -41,8 +41,8 @@
     <link rel="preconnect" href="https://script.googleusercontent.com" />
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-    <link href="include/css/contrabas-redesign.css?v=34" rel="stylesheet" />
-    <link href="include/css/contrabas-cases.css?v=34" rel="stylesheet" />
+    <link href="include/css/contrabas-redesign.css?v=40" rel="stylesheet" />
+    <link href="include/css/contrabas-cases.css?v=40" rel="stylesheet" />
 
     <script type="application/ld+json">
     {
@@ -284,31 +284,39 @@
     <div class="cx-lead__overlay" data-lead-close></div>
     <div class="cx-lead__box" role="dialog" aria-modal="true" aria-labelledby="cx-lead-title">
         <button type="button" class="cx-lead__x" data-lead-close aria-label="Close">&times;</button>
-        <span class="cx-eyebrow">Start a project</span>
-        <h3 class="cx-lead__title" id="cx-lead-title">Tell us about your idea</h3>
-        <p class="cx-lead__sub">Leave your contacts and a short brief — we'll get back to you shortly.</p>
-        <form class="cx-form" id="cx-lead-form" novalidate>
-            <div class="cx-field">
-                <label for="cx-lead-name">Your name</label>
-                <input type="text" id="cx-lead-name" name="name" placeholder="Name" required />
-            </div>
-            <div class="cx-field">
-                <label for="cx-lead-contact">Email or phone</label>
-                <input type="text" id="cx-lead-contact" name="email" placeholder="hello@brand.com" required />
-            </div>
-            <div class="cx-field">
-                <label for="cx-lead-message">About the project</label>
-                <textarea id="cx-lead-message" name="message" placeholder="Briefly describe your task…"></textarea>
-            </div>
-            <div class="cx-form__actions">
-                <button type="submit" class="cx-btn cx-btn--solid cx-btn--lg">Send <span class="cx-btn__arw">→</span></button>
-                <span class="cx-form__status" id="cx-lead-status"></span>
-            </div>
-        </form>
+        <div id="cx-lead-form-view">
+            <span class="cx-eyebrow">Start a project</span>
+            <h3 class="cx-lead__title" id="cx-lead-title">Tell us about your idea</h3>
+            <p class="cx-lead__sub">Leave your contacts and a short brief — we'll get back to you shortly.</p>
+            <form class="cx-form" id="cx-lead-form" novalidate>
+                <div class="cx-field">
+                    <label for="cx-lead-name">Your name</label>
+                    <input type="text" id="cx-lead-name" name="name" placeholder="Name" required />
+                </div>
+                <div class="cx-field">
+                    <label for="cx-lead-contact">Email or phone</label>
+                    <input type="text" id="cx-lead-contact" name="email" placeholder="hello@brand.com" required />
+                </div>
+                <div class="cx-field">
+                    <label for="cx-lead-message">About the project</label>
+                    <textarea id="cx-lead-message" name="message" placeholder="Briefly describe your task…"></textarea>
+                </div>
+                <div class="cx-form__actions">
+                    <button type="submit" class="cx-btn cx-btn--solid cx-btn--lg">Send <span class="cx-btn__arw">→</span></button>
+                    <span class="cx-form__status" id="cx-lead-status"></span>
+                </div>
+            </form>
+        </div>
+        <div id="cx-lead-thanks-view" class="cx-lead__thanks" hidden>
+            <div class="cx-lead__thanksIco">✓</div>
+            <h3 class="cx-lead__title">Thank you!</h3>
+            <p class="cx-lead__sub">We've received your message and will get back to you shortly.</p>
+            <button type="button" class="cx-btn cx-btn--lg" data-lead-close>Close</button>
+        </div>
     </div>
 </div>
 
-<script src="include/js/contrabas-redesign.js?v=34"></script>
-<script src="include/js/contrabas-cases.js?v=34"></script>
+<script src="include/js/contrabas-redesign.js?v=40"></script>
+<script src="include/js/contrabas-cases.js?v=40"></script>
 </body>
 </html>
