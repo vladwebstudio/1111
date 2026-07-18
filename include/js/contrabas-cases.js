@@ -325,8 +325,12 @@
     var m;
     m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
     if (m) return { provider: 'youtube', id: m[1], thumb: 'https://img.youtube.com/vi/' + m[1] + '/hqdefault.jpg' };
-    m = url.match(/vimeo\.com\/(?:video\/|channels\/[^\/]+\/|groups\/[^\/]+\/videos\/)?(\d+)/);
-    if (m) return { provider: 'vimeo', id: m[1], thumb: '' };
+    // Приватні Vimeo-посилання мають вигляд vimeo.com/12345/abcdef0123 —
+    // другий сегмент (hash) ОБОВ'ЯЗКОВИЙ для показу відео (без нього плеєр
+    // видасть "This video is private"). Зберігаємо його разом з id як
+    // "12345/abcdef0123" — embedUrl() нижче розбирає це назад.
+    m = url.match(/vimeo\.com\/(?:video\/|channels\/[^\/]+\/|groups\/[^\/]+\/videos\/)?(\d+)(?:\/([a-zA-Z0-9]+))?/);
+    if (m) return { provider: 'vimeo', id: m[1] + (m[2] ? '/' + m[2] : ''), thumb: '' };
     return null;
   }
   function fetchVimeoThumb(id, cb) {
@@ -354,7 +358,13 @@
     // (без mute автозапуск блокується, і YouTube показує постер-посилання, тап по
     // якому на телефоні перекидає на youtube.com — саме це й ловив користувач).
     if (v.provider === 'youtube') return 'https://www.youtube-nocookie.com/embed/' + v.id + '?autoplay=1&mute=1&rel=0&playsinline=1&controls=1&modestbranding=1';
-    if (v.provider === 'vimeo') return 'https://player.vimeo.com/video/' + v.id + '?autoplay=1&muted=1&playsinline=1';
+    if (v.provider === 'vimeo') {
+      // v.id може бути "12345" або "12345/hash" (приватне відео) — hash іде
+      // окремим параметром ?h=, а не частиною шляху /video/.
+      var vParts = String(v.id).split('/');
+      var vHash = vParts.length > 1 ? '&h=' + vParts[1] : '';
+      return 'https://player.vimeo.com/video/' + vParts[0] + '?autoplay=1&muted=1&playsinline=1' + vHash;
+    }
     return '';
   }
   // Надійне визначення відео кейсу: спершу довіряємо збереженим provider/video_id
@@ -451,11 +461,10 @@
           '<div class="cc-head__top">' +
             (LIMIT ? (
               '<div class="cc-head__l">' +
-                '<span class="cx-eyebrow">' + esc(T.eyebrow) + '</span>' +
+                '<span class="cx-eyebrow" data-cc-admin-trigger>' + esc(T.eyebrow) + '</span>' +
                 '<h2>' + esc(T.heading) + '</h2>' +
               '</div>'
             ) : '<div class="cc-head__l"></div>') +
-            '<button type="button" class="cc-manage-link" id="cc-manage">' + esc(T.manage) + ' &rarr;</button>' +
           '</div>' +
           // Нижній рядок: категорії (фільтри) ліворуч, кнопка «Всі кейси» праворуч.
           '<div class="cc-head__bar">' +
@@ -468,7 +477,7 @@
       '</div>' +
       modalHtml() + videoModalHtml();
 
-    document.getElementById('cc-manage').addEventListener('click', openModal);
+    attachAdminTriggers();
     wireModal(); wireVideoModal();
     renderFilters(); renderCases();
     renderHeroList();
@@ -903,6 +912,33 @@
       }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
     });
   }
+  /* ---------- Прихований вхід в адмінку ----------
+     Кнопки «Керувати кейсами» на видному місці більше немає — звичайний
+     відвідувач її не бачить. Замовник відкриває адмінку 5-ма швидкими
+     тапами/кліками по маленькому написові-«eyebrow» над заголовком
+     портфоліо (на головній — «Наші кейси», на «Всі кейси» — «Портфоліо»).
+     Елемент позначається атрибутом data-cc-admin-trigger — і в JS-розмітці
+     тут, і статично в works.html/works-eng.html. */
+  var adminTapCount = 0, adminTapTimer = null;
+  function handleAdminTap() {
+    adminTapCount++;
+    clearTimeout(adminTapTimer);
+    adminTapTimer = setTimeout(function () { adminTapCount = 0; }, 1500);
+    if (adminTapCount >= 5) {
+      adminTapCount = 0;
+      clearTimeout(adminTapTimer);
+      openModal();
+    }
+  }
+  function attachAdminTriggers() {
+    var els = document.querySelectorAll('[data-cc-admin-trigger]');
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].getAttribute('data-cc-admin-bound')) continue; // не дублюємо слухач
+      els[i].setAttribute('data-cc-admin-bound', '1');
+      els[i].addEventListener('click', handleAdminTap);
+    }
+  }
+
   function openModal() {
     var m = document.getElementById('cc-modal');
     modalSession++; // нова «сесія» відкриття — щоб відкладене автозакриття від старої дії не закрило заново відкрите вікно
