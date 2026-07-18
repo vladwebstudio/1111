@@ -115,9 +115,10 @@
       aboutTitle: 'Про нас', aboutTextUk: 'Текст укр', aboutTextEn: 'Текст англ',
       contactsTitle: 'Контакти', cPhone: 'Телефон (для посилання tel:)', cPhoneDisplay: 'Телефон (як показувати)',
       cManager: 'Ім’я менеджера', cEmail: 'Email', cAddrUk: 'Адреса (укр)', cAddrEn: 'Адреса (англ)',
-      cInstagram: 'Instagram студії (посилання)', cInstagramAgency: 'Instagram агенції (посилання)',
-      cInstagramPerson: 'Instagram засновника (посилання)', cYoutube: 'YouTube (посилання)',
+      cInstagram: 'Instagram Продакшн (посилання)', cInstagramAgency: 'Instagram Агенція (посилання)',
+      cInstagramPerson: 'Instagram Продюсер (посилання)', cYoutube: 'YouTube (посилання)',
       cVimeo: 'Vimeo (посилання)', cFacebook: 'Facebook (посилання)',
+      cManagerTelegram: 'Telegram менеджера (посилання, показується біля імені)',
       settingsSaved: 'Збережено ✓ Оновиться на сайті за кілька секунд.',
       chooseHero: 'Редагувати Hero', chooseHeroSub: 'Заголовок і опис першого екрана',
       chooseCats: 'Категорії проєктів', chooseCatsSub: 'Додати / змінити / видалити категорії',
@@ -198,9 +199,10 @@
       aboutTitle: 'About us', aboutTextUk: 'Text (UA)', aboutTextEn: 'Text (EN)',
       contactsTitle: 'Contacts', cPhone: 'Phone (for tel: link)', cPhoneDisplay: 'Phone (displayed)',
       cManager: 'Manager name', cEmail: 'Email', cAddrUk: 'Address (UA)', cAddrEn: 'Address (EN)',
-      cInstagram: 'Studio Instagram (link)', cInstagramAgency: 'Agency Instagram (link)',
-      cInstagramPerson: 'Founder Instagram (link)', cYoutube: 'YouTube (link)',
+      cInstagram: 'Production Instagram (link)', cInstagramAgency: 'Agency Instagram (link)',
+      cInstagramPerson: 'Producer Instagram (link)', cYoutube: 'YouTube (link)',
       cVimeo: 'Vimeo (link)', cFacebook: 'Facebook (link)',
+      cManagerTelegram: 'Manager Telegram (link, shown next to the name)',
       settingsSaved: 'Saved ✓ The site will update in a few seconds.',
       chooseHero: 'Edit Hero', chooseHeroSub: 'Title and description of the first screen',
       chooseCats: 'Project categories', chooseCatsSub: 'Add / edit / delete categories',
@@ -1507,12 +1509,13 @@
           inp('phone', T.cPhone, g('phone'), false, 'half', '+380...') +
           inp('phone_display', T.cPhoneDisplay, g('phone_display'), false, 'half', '+38 0..') +
           inp('manager', T.cManager, g('manager'), false, 'half') +
+          inp('manager_telegram', T.cManagerTelegram, g('manager_telegram'), false, 'half') +
           inp('email', T.cEmail, g('email'), false, 'half') +
           inp('address_uk', T.cAddrUk, g('address_uk'), false, 'full') +
           inp('address_en', T.cAddrEn, g('address_en'), false, 'full') +
+          inp('instagram_person', T.cInstagramPerson, g('instagram_person'), false, 'half') +
           inp('instagram', T.cInstagram, g('instagram'), false, 'half') +
           inp('instagram_agency', T.cInstagramAgency, g('instagram_agency'), false, 'half') +
-          inp('instagram_person', T.cInstagramPerson, g('instagram_person'), false, 'half') +
           inp('youtube', T.cYoutube, g('youtube'), false, 'half') +
           inp('vimeo', T.cVimeo, g('vimeo'), false, 'half') +
           inp('facebook', T.cFacebook, g('facebook'), false, 'full') +
@@ -1522,7 +1525,7 @@
           '<span class="cc-status" id="cc-status"></span>' +
         '</div>' +
       '</form>';
-    var keys = ['phone', 'phone_display', 'manager', 'email', 'address_uk', 'address_en',
+    var keys = ['phone', 'phone_display', 'manager', 'manager_telegram', 'email', 'address_uk', 'address_en',
                 'instagram', 'instagram_agency', 'instagram_person', 'youtube', 'vimeo', 'facebook'];
     document.getElementById('cc-contacts-form').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -1997,15 +2000,43 @@
       return '<p>' + esc(p.trim()).replace(/\n/g, '<br>') + '</p>';
     }).join('');
   }
+  function igHandle(url) {
+    if (!url) return '';
+    var m = String(url).match(/instagram\.com\/([^/?#]+)/i);
+    return m && m[1] ? '@' + m[1] : '';
+  }
+  function tgHandle(url) {
+    if (!url) return '';
+    var m = String(url).match(/t\.me\/([^/?#]+)/i);
+    return m && m[1] ? '@' + m[1] : '';
+  }
+  // Рядок соцмережі: посилання (іконка + назва) відкриває профіль, кнопка праворуч — копіює нік (@handle),
+  // видобутий із самого посилання. Якщо URL порожній — рядок ховається.
+  function setSocialRow(linkId, handleId, url, extractFn) {
+    var linkEl = document.getElementById(linkId);
+    if (linkEl) {
+      if (url) { linkEl.setAttribute('href', url); linkEl.style.display = ''; }
+      else { linkEl.style.display = 'none'; }
+    }
+    if (handleId) {
+      var handleEl = document.getElementById(handleId);
+      if (handleEl) {
+        var h = (url && extractFn) ? extractFn(url) : '';
+        if (h) { handleEl.textContent = h; handleEl.setAttribute('data-copy', h); handleEl.style.display = ''; }
+        else { handleEl.style.display = 'none'; }
+      }
+    }
+  }
   function applyContactsToPage() {
     var c = SITE_CONTACTS;
     if (!c) return;
     var addr = (LANG === 'en' && c.address_en) ? c.address_en : c.address_uk;
     function setText(id, val) { var e = document.getElementById(id); if (e && val) e.textContent = val; }
     function setHref(id, val, prefix) { var e = document.getElementById(id); if (e && val) e.setAttribute('href', (prefix || '') + val); }
-    // Блок «Контакти»
+    // Блок «Контакти» (легасі, приховано на сторінках — лишено для сумісності)
     setHref('cx-contact-phone', c.phone, 'tel:'); setText('cx-contact-phone', c.phone_display || c.phone);
     setText('cx-contact-manager', c.manager);
+    setSocialRow('cx-contact-manager-telegram', null, c.manager_telegram, tgHandle);
     setHref('cx-contact-email', c.email, 'mailto:'); setText('cx-contact-email', c.email);
     setText('cx-contact-address', addr);
     setHref('cx-contact-s-instagram', c.instagram); setHref('cx-contact-s-instagram-agency', c.instagram_agency);
@@ -2013,11 +2044,13 @@
     setHref('cx-contact-s-youtube', c.youtube); setHref('cx-contact-s-vimeo', c.vimeo); setHref('cx-contact-s-facebook', c.facebook);
     // Футер
     setHref('cx-footer-phone', c.phone, 'tel:'); setText('cx-footer-phone', c.phone_display || c.phone);
+    setSocialRow('cx-footer-manager-telegram', 'cx-footer-manager-telegram-handle', c.manager_telegram, tgHandle);
     setText('cx-footer-manager', c.manager);
     setHref('cx-footer-email', c.email, 'mailto:'); setText('cx-footer-email', c.email);
     setText('cx-footer-address1', addr);
-    setHref('cx-footer-s-instagram', c.instagram); setHref('cx-footer-s-instagram-agency', c.instagram_agency);
-    setHref('cx-footer-s-instagram-person', c.instagram_person);
+    setSocialRow('cx-footer-s-instagram-person', 'cx-footer-s-instagram-person-handle', c.instagram_person, igHandle);
+    setSocialRow('cx-footer-s-instagram', 'cx-footer-s-instagram-handle', c.instagram, igHandle);
+    setSocialRow('cx-footer-s-instagram-agency', 'cx-footer-s-instagram-agency-handle', c.instagram_agency, igHandle);
     setHref('cx-footer-s-youtube', c.youtube); setHref('cx-footer-s-vimeo', c.vimeo); setHref('cx-footer-s-facebook', c.facebook);
   }
 
@@ -2111,6 +2144,30 @@
       fetchVimeoThumb(img.getAttribute('data-vimeo'), function (t) { if (t) img.src = t; });
     });
   }
+
+  // Клік по ніку Instagram у футері — копіює його в буфер обміну
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('.cx-footer__handle');
+    if (!btn) return;
+    var text = btn.getAttribute('data-copy') || btn.textContent;
+    if (!text) return;
+    var orig = btn.getAttribute('data-copy') || text;
+    function done() {
+      btn.classList.add('is-copied');
+      btn.textContent = LANG === 'en' ? 'Copied ✓' : 'Скопійовано ✓';
+      setTimeout(function () { btn.classList.remove('is-copied'); btn.textContent = orig; }, 1400);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(function () {});
+    } else {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        done();
+      } catch (err) {}
+    }
+  });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
   else build();
