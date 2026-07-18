@@ -313,6 +313,7 @@
 .cc-vrow__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .cc-vrow__main input { background: transparent; border: 0; border-bottom: 1px solid #262626; color: #f2f2f2; font-family: inherit; font-size: 14px; padding: 6px 0; outline: none; transition: border-color .2s; }
 .cc-vrow__main input:focus { border-bottom-color: #e0201f; }
+.cc-vrow__main input.cc-vcaption { font-size: 12px; color: #b8b8b8; }
 .cc-vrow__meta { color: #7a7a7a; font-size: 11px; }
 .cc-vrow__meta b { color: #ccc; }
 .cc-vrow__del { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: transparent; border: 1px solid #333; color: #aaa; font-size: 20px; line-height: 1; cursor: pointer; transition: all .2s; }

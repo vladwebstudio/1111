@@ -109,6 +109,7 @@
       videos: 'відео', reelsTitle: 'Ролики кейсу',
       videosLabel: 'Відео кейсу', addVideo: 'Додати відео', cover: 'Обкладинка',
       videosHint: 'Перше відео — головне (обкладинка). Додайте кілька — вони покажуться сіткою роликів у кейсі.',
+      reelCaptionPh: 'Підпис під роликом (необов’язково) — напр. «Бекстейдж»',
       viewAll: 'Всі кейси', descHint: 'Виділяй заголовки *зірочками* — вони стануть червоними підзаголовками, решта тексту під ними лишиться звичайним описом. Приклад: *Задача* текст… *Наше рішення* текст…',
       chooseAbout: 'Редагувати «Про нас»', chooseAboutSub: 'Текст на сайті в секції "Про нас"',
       chooseContacts: 'Редагувати контакти', chooseContactsSub: 'Телефон, email, адреса, соцмережі (футер і контакти)',
@@ -193,6 +194,7 @@
       videos: 'videos', reelsTitle: 'Case reels',
       videosLabel: 'Case videos', addVideo: 'Add video', cover: 'Cover',
       videosHint: 'The first video is the main one (cover). Add several — they appear as a reels grid in the case.',
+      reelCaptionPh: 'Caption under the video (optional) — e.g. “Backstage”',
       viewAll: 'All work', descHint: 'Wrap headings in *asterisks* — they become red subheadings, the rest of the text under them stays a normal description. Example: *The task* text… *Our solution* text…',
       chooseAbout: 'Edit "About us"', chooseAboutSub: 'The About-us text shown on the site',
       chooseContacts: 'Edit contacts', chooseContactsSub: 'Phone, email, address, socials (footer & contact section)',
@@ -769,6 +771,14 @@
     return String(raw).split(/[\n,]+/).map(function (s) { return s.trim(); })
       .filter(Boolean).map(function (u) { return parseVideo(u); }).filter(Boolean);
   }
+  // Підписи роликів (паралельний до reels список, по одному рядку — може містити
+  // порожні рядки, якщо підпис не заданий; порожній рядок НЕ вирізаємо, щоб
+  // індекси лишались синхронними з parseReels()).
+  function parseReelTitles(item) {
+    var raw = item.reel_titles;
+    if (raw === undefined || raw === null || raw === '') return [];
+    return String(raw).split('\n');
+  }
   // Рендер сітки роликів (2 колонки, як у ТЗ). Клік по ролику відкриває його у плеєрі.
   function renderReels(item, player) {
     var box = document.getElementById('cc-vreels');
@@ -776,17 +786,20 @@
     var reels = parseReels(item);
     // Сітка роликів має сенс лише для кейсів із кількома відео (2+).
     if (reels.length < 2) { box.innerHTML = ''; box.classList.remove('cc-on'); return; }
+    var titles = parseReelTitles(item);
     box.classList.add('cc-on');
     box.innerHTML = '<h4 class="cc-vmodal__reelsTitle">' + esc(T.reelsTitle) + '</h4><div class="cc-reels-grid">' +
       reels.map(function (r, idx) {
         var th = r.provider === 'youtube' ? r.thumb : '';
+        var custom = (titles[idx] || '').trim();
+        var label = custom || ('Reel ' + (idx + 1));
         return '<button type="button" class="cc-reel" data-reel="' + idx + '">' +
           '<span class="cc-reel__media">' +
-            (th ? '<img loading="lazy" src="' + esc(th) + '" alt="Reel ' + (idx + 1) + '">'
-                : '<img loading="lazy" alt="Reel ' + (idx + 1) + '" data-vimeo="' + esc(r.id) + '">') +
+            (th ? '<img loading="lazy" src="' + esc(th) + '" alt="' + esc(label) + '">'
+                : '<img loading="lazy" alt="' + esc(label) + '" data-vimeo="' + esc(r.id) + '">') +
             '<span class="cc-reel__play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>' +
           '</span>' +
-          '<span class="cc-reel__n">Reel ' + (idx + 1) + '</span>' +
+          '<span class="cc-reel__n">' + esc(label) + '</span>' +
         '</button>';
       }).join('') + '</div>';
     Array.prototype.forEach.call(box.querySelectorAll('.cc-reel'), function (b) {
@@ -1630,28 +1643,33 @@
   }
 
   /* --------- Динамічний список відео у формі --------- */
-  // Збираємо початкові URL кейсу: спочатку reels (усі відео), інакше — головне відео.
+  // Збираємо початкові відео кейсу (URL + підпис): спочатку reels/reel_titles
+  // (усі відео, з їхніми підписами по тому ж індексу), інакше — головне відео.
   function collectInitialVideos(it) {
-    if (!it) return [''];
+    if (!it) return [{ url: '', caption: '' }];
     var urls = [];
+    var caps = [];
     if (it.reels) {
       urls = String(it.reels).split(/[\n,]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+      var rawCaps = (it.reel_titles !== undefined && it.reel_titles !== null) ? String(it.reel_titles).split('\n') : [];
+      caps = urls.map(function (_, i) { return (rawCaps[i] || '').trim(); });
     }
     if (it.video_url) {
       // головне відео має бути першим і не дублюватися
       var mainV = parseVideo(it.video_url);
       var exists = urls.some(function (u) { var v = parseVideo(u); return v && mainV && v.id === mainV.id; });
-      if (!exists) urls.unshift(it.video_url);
+      if (!exists) { urls.unshift(it.video_url); caps.unshift(''); }
     }
-    return urls.length ? urls : [''];
+    if (!urls.length) return [{ url: '', caption: '' }];
+    return urls.map(function (u, i) { return { url: u, caption: caps[i] || '' }; });
   }
-  function initVideoRows(urls) {
+  function initVideoRows(items) {
     var box = document.getElementById('cc-videos');
     if (box) box.innerHTML = '';
-    (urls && urls.length ? urls : ['']).forEach(function (u) { addVideoRow(u); });
+    (items && items.length ? items : [{ url: '', caption: '' }]).forEach(function (it) { addVideoRow(it.url, it.caption); });
     updateVideoRowsUI();
   }
-  function addVideoRow(url) {
+  function addVideoRow(url, caption) {
     var box = document.getElementById('cc-videos');
     if (!box) return;
     var row = document.createElement('div');
@@ -1660,6 +1678,7 @@
       '<span class="cc-vrow__thumb"><img alt=""></span>' +
       '<div class="cc-vrow__main">' +
         '<input type="text" class="cc-vinput" value="' + esc(url || '') + '" placeholder="https://youtu.be/…  ·  https://vimeo.com/…">' +
+        '<input type="text" class="cc-vcaption" value="' + esc(caption || '') + '" placeholder="' + esc(T.reelCaptionPh) + '">' +
         '<span class="cc-vrow__meta"></span>' +
       '</div>' +
       '<button type="button" class="cc-vrow__del" title="' + esc(T.del) + '">&times;</button>';
@@ -1694,9 +1713,16 @@
       if (del) del.style.visibility = rows.length > 1 ? 'visible' : 'hidden';
     });
   }
-  function collectVideoUrls() {
-    return Array.prototype.slice.call(document.querySelectorAll('#cc-videos .cc-vinput'))
-      .map(function (el) { return el.value.trim(); }).filter(Boolean);
+  // Повертає {url, caption} тільки для рядків із непорожнім URL (порожні рядки форми
+  // ігноруються повністю, тож url/caption лишаються синхронними по індексу).
+  function collectVideoRows() {
+    return Array.prototype.slice.call(document.querySelectorAll('#cc-videos .cc-vrow'))
+      .map(function (row) {
+        var uEl = row.querySelector('.cc-vinput');
+        var cEl = row.querySelector('.cc-vcaption');
+        return { url: uEl ? uEl.value.trim() : '', caption: cEl ? cEl.value.trim() : '' };
+      })
+      .filter(function (r) { return r.url; });
   }
 
   function inp(name, label, val, req, size, ph) {
@@ -1725,19 +1751,21 @@
     if (!d.name_uk) { setStatus(T.needName, 'err'); return; }
 
     // Усі відео кейсу (перше — обкладинка/головне, повний список — сітка роликів).
-    var urls = collectVideoUrls();
-    if (!urls.length) { setStatus(T.needUrl, 'err'); return; }
+    var rows = collectVideoRows();
+    if (!rows.length) { setStatus(T.needUrl, 'err'); return; }
     var parsed = [];
-    for (var i = 0; i < urls.length; i++) {
-      var pv = parseVideo(urls[i]);
+    for (var i = 0; i < rows.length; i++) {
+      var pv = parseVideo(rows[i].url);
       if (!pv) { setStatus(T.badUrl, 'err'); return; }
-      parsed.push({ url: urls[i], v: pv });
+      parsed.push({ url: rows[i].url, v: pv });
     }
     var main = parsed[0];
     var v = main.v;
-    // reels зберігаємо ЗАВЖДИ повний список (усі відео), навіть якщо воно одне —
-    // так візуалізація й редагування працюють однаково.
-    d.reels = urls.join('\n');
+    // reels/reel_titles зберігаємо ЗАВЖДИ повним списком (усі відео, з підписами по
+    // тому ж індексу), навіть якщо відео одне — так візуалізація й редагування
+    // працюють однаково.
+    d.reels = rows.map(function (r) { return r.url; }).join('\n');
+    d.reel_titles = rows.map(function (r) { return r.caption; }).join('\n');
 
     setStatus(T.saving, 'load');
     var btn = document.getElementById('cc-submit');
@@ -1752,7 +1780,7 @@
         name_uk: d.name_uk, name_en: d.name_en, video_url: main.url,
         provider: v.provider, video_id: v.id, thumb: thumb || '',
         category: d.category, year: d.year, placement: d.placement,
-        desc_uk: d.desc_uk, desc_en: d.desc_en, reels: d.reels
+        desc_uk: d.desc_uk, desc_en: d.desc_en, reels: d.reels, reel_titles: d.reel_titles
       };
       if (editingId) params.id = editingId;
       function unlock() { var b = document.getElementById('cc-submit'); if (b) b.disabled = false; }
@@ -1797,7 +1825,7 @@
       category: params.category, year: params.year, placement: params.placement,
       provider: params.provider, video_id: params.video_id, video_url: params.video_url,
       thumb: thumb || params.thumb || '', desc_uk: params.desc_uk, desc_en: params.desc_en,
-      reels: params.reels || ''
+      reels: params.reels || '', reel_titles: params.reel_titles || ''
     };
     var idx = -1;
     for (var i = 0; i < ALL.length; i++) if (String(ALL[i].id) === String(id)) { idx = i; break; }
