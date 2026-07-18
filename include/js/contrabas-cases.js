@@ -115,7 +115,8 @@
       aboutTitle: 'Про нас', aboutTextUk: 'Текст укр', aboutTextEn: 'Текст англ',
       contactsTitle: 'Контакти', cPhone: 'Телефон (для посилання tel:)', cPhoneDisplay: 'Телефон (як показувати)',
       cManager: 'Ім’я менеджера', cEmail: 'Email', cAddrUk: 'Адреса (укр)', cAddrEn: 'Адреса (англ)',
-      cTelegram: 'Telegram (посилання)', cInstagram: 'Instagram (посилання)', cYoutube: 'YouTube (посилання)',
+      cInstagram: 'Instagram студії (посилання)', cInstagramAgency: 'Instagram агенції (посилання)',
+      cInstagramPerson: 'Instagram засновника (посилання)', cYoutube: 'YouTube (посилання)',
       cVimeo: 'Vimeo (посилання)', cFacebook: 'Facebook (посилання)',
       settingsSaved: 'Збережено ✓ Оновиться на сайті за кілька секунд.',
       chooseHero: 'Редагувати Hero', chooseHeroSub: 'Заголовок і опис першого екрана',
@@ -197,7 +198,8 @@
       aboutTitle: 'About us', aboutTextUk: 'Text (UA)', aboutTextEn: 'Text (EN)',
       contactsTitle: 'Contacts', cPhone: 'Phone (for tel: link)', cPhoneDisplay: 'Phone (displayed)',
       cManager: 'Manager name', cEmail: 'Email', cAddrUk: 'Address (UA)', cAddrEn: 'Address (EN)',
-      cTelegram: 'Telegram (link)', cInstagram: 'Instagram (link)', cYoutube: 'YouTube (link)',
+      cInstagram: 'Studio Instagram (link)', cInstagramAgency: 'Agency Instagram (link)',
+      cInstagramPerson: 'Founder Instagram (link)', cYoutube: 'YouTube (link)',
       cVimeo: 'Vimeo (link)', cFacebook: 'Facebook (link)',
       settingsSaved: 'Saved ✓ The site will update in a few seconds.',
       chooseHero: 'Edit Hero', chooseHeroSub: 'Title and description of the first screen',
@@ -1508,8 +1510,9 @@
           inp('email', T.cEmail, g('email'), false, 'half') +
           inp('address_uk', T.cAddrUk, g('address_uk'), false, 'full') +
           inp('address_en', T.cAddrEn, g('address_en'), false, 'full') +
-          inp('telegram', T.cTelegram, g('telegram'), false, 'half') +
           inp('instagram', T.cInstagram, g('instagram'), false, 'half') +
+          inp('instagram_agency', T.cInstagramAgency, g('instagram_agency'), false, 'half') +
+          inp('instagram_person', T.cInstagramPerson, g('instagram_person'), false, 'half') +
           inp('youtube', T.cYoutube, g('youtube'), false, 'half') +
           inp('vimeo', T.cVimeo, g('vimeo'), false, 'half') +
           inp('facebook', T.cFacebook, g('facebook'), false, 'full') +
@@ -1520,7 +1523,7 @@
         '</div>' +
       '</form>';
     var keys = ['phone', 'phone_display', 'manager', 'email', 'address_uk', 'address_en',
-                'telegram', 'instagram', 'youtube', 'vimeo', 'facebook'];
+                'instagram', 'instagram_agency', 'instagram_person', 'youtube', 'vimeo', 'facebook'];
     document.getElementById('cc-contacts-form').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target;
@@ -2005,14 +2008,16 @@
     setText('cx-contact-manager', c.manager);
     setHref('cx-contact-email', c.email, 'mailto:'); setText('cx-contact-email', c.email);
     setText('cx-contact-address', addr);
-    setHref('cx-contact-s-telegram', c.telegram); setHref('cx-contact-s-instagram', c.instagram);
+    setHref('cx-contact-s-instagram', c.instagram); setHref('cx-contact-s-instagram-agency', c.instagram_agency);
+    setHref('cx-contact-s-instagram-person', c.instagram_person);
     setHref('cx-contact-s-youtube', c.youtube); setHref('cx-contact-s-vimeo', c.vimeo); setHref('cx-contact-s-facebook', c.facebook);
     // Футер
     setHref('cx-footer-phone', c.phone, 'tel:'); setText('cx-footer-phone', c.phone_display || c.phone);
     setText('cx-footer-manager', c.manager);
     setHref('cx-footer-email', c.email, 'mailto:'); setText('cx-footer-email', c.email);
     setText('cx-footer-address1', addr);
-    setHref('cx-footer-s-telegram', c.telegram); setHref('cx-footer-s-instagram', c.instagram);
+    setHref('cx-footer-s-instagram', c.instagram); setHref('cx-footer-s-instagram-agency', c.instagram_agency);
+    setHref('cx-footer-s-instagram-person', c.instagram_person);
     setHref('cx-footer-s-youtube', c.youtube); setHref('cx-footer-s-vimeo', c.vimeo); setHref('cx-footer-s-facebook', c.facebook);
   }
 
