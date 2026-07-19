@@ -265,6 +265,14 @@
 .cc-mini:hover { border-color: #e0201f; color: #fff; }
 .cc-mini--danger:hover { border-color: #7a2020; background: #7a2020; color: #fff; }
 
+/* Сортування кейсів (Головна / Всі кейси) */
+.cc-sort-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.cc-sort-col h4 { color: #e0201f; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 10px; font-weight: 700; }
+.cc-sort-handle { display: flex; align-items: center; justify-content: center; color: #666; font-size: 16px; letter-spacing: 2px; cursor: grab; user-select: none; }
+.cc-sort-item[draggable="true"] { cursor: grab; }
+.cc-sort-item--dragging { opacity: .4; }
+@media (max-width: 640px) { .cc-sort-cols { grid-template-columns: 1fr; } }
+
 /* форма */
 .cc-form .cc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
 .cc-field { display: flex; flex-direction: column; }

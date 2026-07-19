@@ -123,6 +123,17 @@
       settingsSaved: 'Збережено ✓ Оновиться на сайті за кілька секунд.',
       chooseHero: 'Редагувати Hero', chooseHeroSub: 'Заголовок і опис першого екрана',
       chooseCats: 'Категорії проєктів', chooseCatsSub: 'Додати / змінити / видалити категорії',
+      chooseSort: 'Сортування кейсів', chooseSortSub: 'Порядок кейсів на головній і в «Всі кейси»',
+      sortChooseTitle: 'Сортування кейсів',
+      sortHomeItem: 'Головна сторінка', sortHomeItemSub: 'Обрати 7 кейсів і їх порядок',
+      sortAllItem: 'Всі кейси', sortAllItemSub: 'Порядок кейсів на сторінці «Всі кейси»',
+      sortHomeScreenTitle: 'Головна сторінка — кейси',
+      sortAllScreenTitle: 'Всі кейси — порядок',
+      sortAvailable: 'Інші кейси', sortSelected: 'На головній',
+      sortHomeHint: 'Перетягуй кейси мишкою (або кнопками «+»/«×» і стрілками) — праворуч максимум 7, саме вони й у такому порядку покажуться на головній сторінці. Порожньо праворуч = сайт сам показує останні додані кейси.',
+      sortAllHint: 'Перетягуй кейси мишкою (або стрілками), щоб змінити порядок на сторінці «Всі кейси». Кейс, якого немає в цьому списку (щойно доданий), сам стане в кінець.',
+      sortMax: 'Максимум 7 кейсів на головній.', sortEmptyAll: 'Ще немає кейсів для сортування.',
+      sortSaved: 'Збережено ✓ Оновиться на сайті за кілька секунд.',
       heroScreenTitle: 'Hero (перший екран)',
       heroTitleUk: 'Заголовок (укр)', heroTitleEn: 'Заголовок (англ)',
       heroLeadUk: 'Опис під заголовком (укр)', heroLeadEn: 'Опис під заголовком (англ)',
@@ -208,6 +219,17 @@
       settingsSaved: 'Saved ✓ The site will update in a few seconds.',
       chooseHero: 'Edit Hero', chooseHeroSub: 'Title and description of the first screen',
       chooseCats: 'Project categories', chooseCatsSub: 'Add / edit / delete categories',
+      chooseSort: 'Sort cases', chooseSortSub: 'Order of cases on the homepage and in "All work"',
+      sortChooseTitle: 'Sort cases',
+      sortHomeItem: 'Homepage', sortHomeItemSub: 'Pick 7 cases and their order',
+      sortAllItem: 'All work', sortAllItemSub: 'Order of cases on the "All work" page',
+      sortHomeScreenTitle: 'Homepage — cases',
+      sortAllScreenTitle: 'All work — order',
+      sortAvailable: 'Other cases', sortSelected: 'On homepage',
+      sortHomeHint: 'Drag cases with the mouse (or use the "+"/"×" buttons and arrows) — up to 7 on the right, shown on the homepage in that exact order. Leave the right side empty and the site falls back to showing the most recently added cases.',
+      sortAllHint: 'Drag cases with the mouse (or use the arrows) to change the order on the "All work" page. A case missing from this list (just added) will go to the end automatically.',
+      sortMax: 'Maximum 7 cases on the homepage.', sortEmptyAll: 'No cases to sort yet.',
+      sortSaved: 'Saved ✓ The site will update in a few seconds.',
       heroScreenTitle: 'Hero (first screen)',
       heroTitleUk: 'Title (UA)', heroTitleEn: 'Title (EN)',
       heroLeadUk: 'Description under title (UA)', heroLeadEn: 'Description under title (EN)',
@@ -422,6 +444,11 @@
   var SITE_CONTACTS = null;   // { phone, phone_display, manager, email, address_uk, address_en, telegram, instagram, youtube, vimeo, facebook }
   var SITE_HERO = null;       // { title_uk, title_en, lead_uk, lead_en, services_eyebrow_*, services_title_* }
   var SITE_SERVICES = null;   // [{ tag_uk, tag_en, name_uk, name_en, desc_uk, desc_en, filter }, …] — картки «Що ми робимо»
+  // Ручне сортування кейсів (адмінка, екран «Сортування кейсів»). Порожній масив =
+  // функція ще не використовувалась — сайт лишається на старій логіці (найновіші
+  // зверху / N останніх на головній).
+  var HOME_ORDER = [];  // id кейсів (макс. 7), у потрібному порядку — головна сторінка
+  var CASES_ORDER = []; // id УСІХ кейсів, у потрібному порядку — сторінка «Всі кейси»
   // Стартуємо оптимістично з демо-набором, щоб портфоліо було готовим МИТТЄВО.
   // Коли бекенд відповість реальними кейсами — вони замінять демо; якщо він
   // доступний і порожній — сітка стане порожньою; якщо недоступний — лишиться демо.
@@ -432,7 +459,32 @@
   // бекенд недоступний, сітка просто лишається порожньою, а не підміняється
   // старими/тестовими кейсами. Адмінка (список/редагування/видалення) так само
   // працює лише з реальним ALL.
-  function shown() { return ALL; }
+  // Впорядковує ALL за CASES_ORDER (сторінка «Всі кейси»). Кейси, яких немає в
+  // CASES_ORDER (щойно додані й ще не розставлені вручну), просто йдуть у кінець
+  // у своєму природному порядку (найновіші зверху за замовчуванням) — вони НЕ
+  // «вилазять» на початок списку самі по собі.
+  function orderedAll() {
+    if (!CASES_ORDER.length) return ALL;
+    var byId = {}; ALL.forEach(function (i) { byId[String(i.id)] = i; });
+    var used = {}, out = [];
+    CASES_ORDER.forEach(function (id) {
+      var it = byId[String(id)];
+      if (it && !used[String(id)]) { out.push(it); used[String(id)] = true; }
+    });
+    ALL.forEach(function (i) { if (!used[String(i.id)]) out.push(i); });
+    return out;
+  }
+  // Кейси для головної сторінки: якщо HOME_ORDER налаштований — саме ці кейси,
+  // саме в цьому порядку (вручну обрано в адмінці). Якщо ще ніхто не налаштував —
+  // стара поведінка (N найновіших).
+  function homeItems() {
+    if (!HOME_ORDER.length) return orderedAll();
+    var byId = {}; ALL.forEach(function (i) { byId[String(i.id)] = i; });
+    var out = [];
+    HOME_ORDER.forEach(function (id) { var it = byId[String(id)]; if (it) out.push(it); });
+    return out;
+  }
+  function shown() { return orderedAll(); }
   function findShown(id) {
     var pool = shown();
     for (var i = 0; i < pool.length; i++) if (String(pool[i].id) === String(id)) return pool[i];
@@ -882,7 +934,7 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
     });
-    document.getElementById('cc-back').addEventListener('click', screenChoose);
+    document.getElementById('cc-back').addEventListener('click', function () { backTarget(); });
   }
   /* ---------- Пароль адмінки ----------
      Перевіряється на бекенді (action=check_password) — сам пароль ніколи не
@@ -971,9 +1023,15 @@
       document.body.classList.remove('no-scroll');
     }
   }
-  function setTitle(t, showBack) {
+  // backTarget — куди веде кнопка «Назад»: за замовчуванням у головне меню,
+  // але екрани всередині під-меню (напр. «Сортування кейсів») можуть передати
+  // свій екран-батько третім аргументом, щоб «Назад» не перескакував одразу
+  // в головне меню.
+  var backTarget = function () {};
+  function setTitle(t, showBack, backFn) {
     document.getElementById('cc-modal-title').textContent = t;
     document.getElementById('cc-back').style.display = showBack ? '' : 'none';
+    backTarget = backFn || screenChoose;
   }
   function body() { return document.getElementById('cc-modal-body'); }
 
@@ -988,6 +1046,10 @@
         '<button type="button" class="cc-choose__item" id="cc-go-edit">' +
           '<span class="cc-choose__ico">✎</span>' +
           '<span class="cc-choose__txt"><b>' + esc(T.chooseEdit) + '</b><i>' + esc(T.chooseEditSub) + '</i></span>' +
+        '</button>' +
+        '<button type="button" class="cc-choose__item" id="cc-go-sort">' +
+          '<span class="cc-choose__ico">⇅</span>' +
+          '<span class="cc-choose__txt"><b>' + esc(T.chooseSort) + '</b><i>' + esc(T.chooseSortSub) + '</i></span>' +
         '</button>' +
         '<button type="button" class="cc-choose__item" id="cc-go-about">' +
           '<span class="cc-choose__ico">i</span>' +
@@ -1020,6 +1082,7 @@
       '</div>';
     document.getElementById('cc-go-add').addEventListener('click', function () { screenForm(null); });
     document.getElementById('cc-go-edit').addEventListener('click', screenList);
+    document.getElementById('cc-go-sort').addEventListener('click', screenSortChoose);
     document.getElementById('cc-go-about').addEventListener('click', screenAbout);
     document.getElementById('cc-go-contacts').addEventListener('click', screenContacts);
     document.getElementById('cc-go-hero').addEventListener('click', screenHero);
@@ -1592,6 +1655,181 @@
     });
   }
 
+  /* ---------- Екран: сортування кейсів (підменю) ---------- */
+  function screenSortChoose() {
+    setTitle(T.sortChooseTitle, true);
+    body().innerHTML =
+      '<div class="cc-choose">' +
+        '<button type="button" class="cc-choose__item" id="cc-go-sort-home">' +
+          '<span class="cc-choose__ico">7</span>' +
+          '<span class="cc-choose__txt"><b>' + esc(T.sortHomeItem) + '</b><i>' + esc(T.sortHomeItemSub) + '</i></span>' +
+        '</button>' +
+        '<button type="button" class="cc-choose__item" id="cc-go-sort-all">' +
+          '<span class="cc-choose__ico">≡</span>' +
+          '<span class="cc-choose__txt"><b>' + esc(T.sortAllItem) + '</b><i>' + esc(T.sortAllItemSub) + '</i></span>' +
+        '</button>' +
+      '</div>';
+    document.getElementById('cc-go-sort-home').addEventListener('click', screenSortHome);
+    document.getElementById('cc-go-sort-all').addEventListener('click', screenSortAll);
+  }
+
+  // Один рядок сортованого списку (перевикористовує стилі .cc-litem/.cc-mini).
+  function sortRowHtml(item, opts) {
+    opts = opts || {};
+    var title = pick(item, 'name_uk', 'name_en');
+    return '<div class="cc-litem cc-sort-item"' + (opts.draggable ? ' draggable="true"' : '') +
+        ' data-id="' + esc(item.id) + '">' +
+      '<div class="cc-litem__thumb cc-sort-handle">' + (opts.draggable ? '⋮⋮' : '') + '</div>' +
+      '<div class="cc-litem__meta"><b>' + esc(title || '—') + '</b><i>' + esc(item.category || '') +
+        (item.year ? ' · ' + esc(item.year) : '') + '</i></div>' +
+      '<div class="cc-litem__actions">' +
+        (opts.arrows ? '<button type="button" class="cc-mini" data-up="' + esc(item.id) + '">↑</button>' +
+                       '<button type="button" class="cc-mini" data-down="' + esc(item.id) + '">↓</button>' : '') +
+        (opts.addBtn ? '<button type="button" class="cc-mini" data-add="' + esc(item.id) + '">+</button>' : '') +
+        (opts.removeBtn ? '<button type="button" class="cc-mini cc-mini--danger" data-remove="' + esc(item.id) + '">×</button>' : '') +
+      '</div>' +
+    '</div>';
+  }
+  // Пересуває рядок на одну позицію вгору/вниз серед сусідів у тому ж контейнері.
+  function moveRow(row, dir) {
+    if (!row) return;
+    if (dir < 0) { var prev = row.previousElementSibling; if (prev) row.parentNode.insertBefore(row, prev); }
+    else { var next = row.nextElementSibling; if (next) row.parentNode.insertBefore(next, row); }
+  }
+  // Перетягування мишкою: рядок, який тягнуть, лишається в DOM, а
+  // під час наведення на інший рядок одразу міняється з ним місцями —
+  // порядок у DOM завжди відповідає тому, що бачить користувач.
+  function wireDrag(container, onChange) {
+    var dragEl = null;
+    Array.prototype.forEach.call(container.querySelectorAll('.cc-sort-item[draggable="true"]'), function (row) {
+      row.addEventListener('dragstart', function (e) {
+        dragEl = row; row.classList.add('cc-sort-item--dragging');
+        try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', row.getAttribute('data-id') || ''); } catch (er) {}
+      });
+      row.addEventListener('dragend', function () {
+        row.classList.remove('cc-sort-item--dragging');
+        dragEl = null;
+        if (onChange) onChange();
+      });
+      row.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (!dragEl || dragEl === row) return;
+        var rect = row.getBoundingClientRect();
+        var before = (e.clientY - rect.top) < rect.height / 2;
+        container.insertBefore(dragEl, before ? row : row.nextSibling);
+      });
+    });
+  }
+  function rowIds(container) {
+    return Array.prototype.slice.call(container.querySelectorAll('[data-id]')).map(function (el) { return el.getAttribute('data-id'); });
+  }
+
+  /* ---------- Екран: сортування — Головна сторінка (обрати 7 + порядок) ---------- */
+  function screenSortHome() {
+    setTitle(T.sortHomeScreenTitle, true, screenSortChoose);
+    if (!ALL.length) { body().innerHTML = '<div class="cc-modal__empty">' + esc(T.sortEmptyAll) + '</div>'; return; }
+    var byId = {}; ALL.forEach(function (i) { byId[String(i.id)] = i; });
+    // Стартова вибірка — з поточного HOME_ORDER; кейси, яких уже нема (видалені), пропускаємо.
+    var selIds = HOME_ORDER.map(String).filter(function (id) { return byId[id]; });
+
+    function render() {
+      var selSet = {}; selIds.forEach(function (id) { selSet[id] = true; });
+      var avail = orderedAll().filter(function (i) { return !selSet[String(i.id)]; });
+      var sel = selIds.map(function (id) { return byId[id]; }).filter(Boolean);
+      body().innerHTML =
+        '<div class="cc-vhint">' + esc(T.sortHomeHint) + '</div>' +
+        '<div class="cc-sort-cols">' +
+          '<div class="cc-sort-col"><h4>' + esc(T.sortAvailable) + ' (' + avail.length + ')</h4>' +
+            '<div class="cc-list" id="cc-sort-avail">' +
+              avail.map(function (i) { return sortRowHtml(i, { addBtn: sel.length < 7 }); }).join('') +
+            '</div>' +
+          '</div>' +
+          '<div class="cc-sort-col"><h4>' + esc(T.sortSelected) + ' (' + sel.length + '/7)</h4>' +
+            '<div class="cc-list" id="cc-sort-sel">' +
+              sel.map(function (i) { return sortRowHtml(i, { draggable: true, arrows: true, removeBtn: true }); }).join('') +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="cc-form-actions">' +
+          '<button type="button" class="cc-btn" id="cc-sort-save">' + esc(T.save) + '</button>' +
+          '<span class="cc-status" id="cc-status"></span>' +
+        '</div>';
+      var availBox = document.getElementById('cc-sort-avail');
+      var selBox = document.getElementById('cc-sort-sel');
+      function syncSelFromDom() { selIds = rowIds(selBox); }
+      Array.prototype.forEach.call(availBox.querySelectorAll('[data-add]'), function (b) {
+        b.addEventListener('click', function () {
+          if (selIds.length >= 7) { setStatus(T.sortMax, 'err'); return; }
+          selIds.push(b.getAttribute('data-add'));
+          render();
+        });
+      });
+      Array.prototype.forEach.call(selBox.querySelectorAll('[data-remove]'), function (b) {
+        b.addEventListener('click', function () {
+          var id = b.getAttribute('data-remove');
+          selIds = selIds.filter(function (x) { return x !== id; });
+          render();
+        });
+      });
+      Array.prototype.forEach.call(selBox.querySelectorAll('[data-up]'), function (b) {
+        b.addEventListener('click', function () { moveRow(b.closest('.cc-sort-item'), -1); syncSelFromDom(); });
+      });
+      Array.prototype.forEach.call(selBox.querySelectorAll('[data-down]'), function (b) {
+        b.addEventListener('click', function () { moveRow(b.closest('.cc-sort-item'), 1); syncSelFromDom(); });
+      });
+      wireDrag(selBox, syncSelFromDom);
+      document.getElementById('cc-sort-save').addEventListener('click', function () {
+        var ids = rowIds(selBox);
+        setStatus(T.saving, 'load');
+        var btn = document.getElementById('cc-sort-save'); if (btn) btn.disabled = true;
+        jsonp({ action: 'update_order', home_order: ids.join(',') }).then(function (res) {
+          if (btn) btn.disabled = false;
+          if (res && res.ok) {
+            HOME_ORDER = ids.slice(); syncSiteCache(); renderCases();
+            setStatus(T.sortSaved, 'ok');
+          } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
+        }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
+      });
+    }
+    render();
+  }
+
+  /* ---------- Екран: сортування — Всі кейси (повний порядок) ---------- */
+  function screenSortAll() {
+    setTitle(T.sortAllScreenTitle, true, screenSortChoose);
+    if (!ALL.length) { body().innerHTML = '<div class="cc-modal__empty">' + esc(T.sortEmptyAll) + '</div>'; return; }
+    var items = orderedAll();
+    body().innerHTML =
+      '<div class="cc-vhint">' + esc(T.sortAllHint) + '</div>' +
+      '<div class="cc-list" id="cc-sort-all">' +
+        items.map(function (i) { return sortRowHtml(i, { draggable: true, arrows: true }); }).join('') +
+      '</div>' +
+      '<div class="cc-form-actions">' +
+        '<button type="button" class="cc-btn" id="cc-sort-save">' + esc(T.save) + '</button>' +
+        '<span class="cc-status" id="cc-status"></span>' +
+      '</div>';
+    var box = document.getElementById('cc-sort-all');
+    Array.prototype.forEach.call(box.querySelectorAll('[data-up]'), function (b) {
+      b.addEventListener('click', function () { moveRow(b.closest('.cc-sort-item'), -1); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-down]'), function (b) {
+      b.addEventListener('click', function () { moveRow(b.closest('.cc-sort-item'), 1); });
+    });
+    wireDrag(box);
+    document.getElementById('cc-sort-save').addEventListener('click', function () {
+      var ids = rowIds(box);
+      setStatus(T.saving, 'load');
+      var btn = document.getElementById('cc-sort-save'); if (btn) btn.disabled = true;
+      jsonp({ action: 'update_order', cases_order: ids.join(',') }).then(function (res) {
+        if (btn) btn.disabled = false;
+        if (res && res.ok) {
+          CASES_ORDER = ids.slice(); syncSiteCache(); renderCases();
+          setStatus(T.sortSaved, 'ok');
+        } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
+      }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
+    });
+  }
+
   function screenForm(id) {
     editingId = id;
     var it = id ? ALL.filter(function (x) { return String(x.id) === String(id); })[0] : null;
@@ -1882,7 +2120,8 @@
       hero: SITE_HERO,
       categories: CATEGORIES,
       services: SITE_SERVICES,
-      cases: ALL
+      cases: ALL,
+      order: { home: HOME_ORDER, all: CASES_ORDER }
     });
   }
   function applySiteData(res) {
@@ -1892,6 +2131,10 @@
     if (res.hero) { SITE_HERO = res.hero; applyHeroToPage(); applyServicesHead(); }
     if (res.categories && res.categories.length) CATEGORIES = res.categories.slice();
     if (res.services && res.services.length) { SITE_SERVICES = res.services.slice(); renderServicesCards(); }
+    if (res.order) {
+      HOME_ORDER = Array.isArray(res.order.home) ? res.order.home.slice() : [];
+      CASES_ORDER = Array.isArray(res.order.all) ? res.order.all.slice() : [];
+    }
     // getSite_() тепер повертає й кейси (action=site = ОДИН запит замість двох
     // окремих — швидше перше завантаження). Масив може бути й порожнім (реально
     // немає кейсів) — тому перевіряємо саме isArray, а не .length.
@@ -2120,7 +2363,8 @@
   function catLabel(c) { return c; }
   function renderCases() {
     var box = document.getElementById('cc-cases');
-    var items = shown().filter(function (i) { return activeFilter === 'all' || i.category === activeFilter; });
+    var base = LIMIT ? homeItems() : shown();
+    var items = base.filter(function (i) { return activeFilter === 'all' || i.category === activeFilter; });
     if (LIMIT) items = items.slice(0, LIMIT);
     if (!items.length) { box.innerHTML = '<div class="cc-empty">' + T.empty + '</div>'; return; }
     box.innerHTML = items.map(function (i, idx) {
