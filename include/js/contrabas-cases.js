@@ -570,8 +570,10 @@
 
     function update() {
       var max = box.scrollWidth - box.clientWidth;
-      if (max <= 4) { track.style.display = 'none'; return; }
       track.style.display = '';
+      // Гортати нема куди (кейсів мало, всі влізли) — смужка лишається
+      // видимою, але розтягується на всю довжину треку (нема чим гортати).
+      if (max <= 4) { thumb.style.width = '100%'; thumb.style.transform = 'translateX(0%)'; return; }
       var ratio = box.clientWidth / box.scrollWidth;
       var pos = box.scrollLeft / max;
       thumb.style.width = (ratio * 100) + '%';
@@ -2363,9 +2365,18 @@
   function catLabel(c) { return c; }
   function renderCases() {
     var box = document.getElementById('cc-cases');
-    var base = LIMIT ? homeItems() : shown();
-    var items = base.filter(function (i) { return activeFilter === 'all' || i.category === activeFilter; });
-    if (LIMIT) items = items.slice(0, LIMIT);
+    var items;
+    if (LIMIT) {
+      // Головна сторінка: вкладка «Всі» — вручну підібрані/впорядковані кейси
+      // (homeItems()). Конкретна категорія — це вже НЕ підбірка з тих 7, а
+      // останні додані кейси саме цієї категорії (звичайна свіжість, як і
+      // раніше було до появи ручного сортування).
+      items = activeFilter === 'all'
+        ? homeItems().slice(0, LIMIT)
+        : ALL.filter(function (i) { return i.category === activeFilter; }).slice(0, LIMIT);
+    } else {
+      items = shown().filter(function (i) { return activeFilter === 'all' || i.category === activeFilter; });
+    }
     if (!items.length) { box.innerHTML = '<div class="cc-empty">' + T.empty + '</div>'; return; }
     box.innerHTML = items.map(function (i, idx) {
       var title = pick(i, 'name_uk', 'name_en');
