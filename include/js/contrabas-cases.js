@@ -434,6 +434,7 @@
 
   /* ---------------- Стан ---------------- */
   var ALL = [];               // РЕАЛЬНІ кейси з таблиці (керує адмінка: список/редагування/видалення)
+  var scrollbarUpdate = null;  // функція перерахунку .cc-scrollbar — викликається з renderCases() при зміні фільтра
   var activeFilter = 'all';
   var editingId = null;
   var modalSession = 0;       // лічильник відкриттів адмін-модалки (захист від відкладеного автозакриття)
@@ -586,6 +587,10 @@
     var ro = (window.ResizeObserver ? new ResizeObserver(update) : null);
     if (ro) ro.observe(box);
     setTimeout(update, 60);
+    // Даємо доступ ззовні (renderCases() кличе це після кожної зміни фільтра —
+    // ResizeObserver сам по собі НЕ спрацьовує, бо ширина самого контейнера
+    // не міняється, міняється лише вміст/кількість карток усередині).
+    scrollbarUpdate = update;
 
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -2426,6 +2431,14 @@
     Array.prototype.forEach.call(box.querySelectorAll('img[data-vimeo]'), function (img) {
       fetchVimeoThumb(img.getAttribute('data-vimeo'), function (t) { if (t) img.src = t; });
     });
+
+    // Новий набір карток (напр. перемкнули категорію) — скролимо вліво і
+    // перераховуємо смужку скролу заново (кількість карток могла змінитись).
+    if (LIMIT && scrollbarUpdate) {
+      box.scrollLeft = 0;
+      scrollbarUpdate();
+      setTimeout(scrollbarUpdate, 60);
+    }
   }
 
   // Клік по ніку Instagram у футері — копіює його в буфер обміну
