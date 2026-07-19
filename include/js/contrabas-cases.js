@@ -82,6 +82,7 @@
   // відкриється з порожнім CATEGORIES; про всяк випадок форма також має свій
   // текстовий fallback, якщо категорій немає — див. screenForm()).
   var CATEGORIES = [];
+  var CATEGORY_EN = {};       // {укр-назва: англ-переклад} — для показу на eng.html
 
   var T = {
     uk: {
@@ -95,7 +96,9 @@
       addTitle: 'Новий кейс', editTitle: 'Редагувати кейс', listTitle: 'Оберіть кейс',
       nameUk: 'Назва (укр)', nameEn: 'Назва (англ)', videoUrl: 'Посилання на відео (YouTube / Vimeo)',
       category: 'Категорія', year: 'Рік', placement: 'Формат / куди пішов ролик',
+      placementUk: 'Формат / куди пішов ролик (укр)', placementEn: 'Формат / куди пішов ролик (англ)',
       placementPh: 'напр.: ТВ реклама, фільм, Reels…',
+      placementPhUk: 'напр.: ТВ реклама, фільм, Reels…', placementPhEn: 'напр.: TV commercial, film, Reels…',
       descUk: 'Опис проєкту (укр)', descEn: 'Опис проєкту (англ)',
       save: 'Зберегти', saveEdit: 'Зберегти зміни', del: 'Видалити', edit: 'Редагувати',
       back: '‹ Назад', close: 'Закрити',
@@ -110,12 +113,14 @@
       videosLabel: 'Відео кейсу', addVideo: 'Додати відео', cover: 'Обкладинка',
       videosHint: 'Перше відео — головне (обкладинка). Додайте кілька — вони покажуться сіткою роликів у кейсі.',
       reelCaptionPh: 'Підпис під роликом (необов’язково) — напр. «Бекстейдж»',
+      reelCaptionPhUk: 'Підпис укр (напр. «Бекстейдж»)', reelCaptionPhEn: 'Підпис англ (напр. «Backstage»)',
       viewAll: 'Всі кейси', descHint: 'Виділяй заголовки *зірочками* — вони стануть червоними підзаголовками, решта тексту під ними лишиться звичайним описом. Приклад: *Задача* текст… *Наше рішення* текст…',
       chooseAbout: 'Редагувати «Про нас»', chooseAboutSub: 'Текст на сайті в секції "Про нас"',
       chooseContacts: 'Редагувати контакти', chooseContactsSub: 'Телефон, email, адреса, соцмережі (футер і контакти)',
       aboutTitle: 'Про нас', aboutTextUk: 'Текст укр', aboutTextEn: 'Текст англ',
       contactsTitle: 'Контакти', cPhone: 'Телефон (для посилання tel:)', cPhoneDisplay: 'Телефон (як показувати)',
-      cManager: 'Ім’я менеджера', cEmail: 'Email', cAddrUk: 'Адреса (укр)', cAddrEn: 'Адреса (англ)',
+      cManager: 'Ім’я менеджера', cManagerUk: 'Ім’я менеджера (укр)', cManagerEn: 'Ім’я менеджера (англ)',
+      cEmail: 'Email', cAddrUk: 'Адреса (укр)', cAddrEn: 'Адреса (англ)',
       cInstagram: 'Instagram Продакшн (посилання)', cInstagramAgency: 'Instagram Агенція (посилання)',
       cInstagramPerson: 'Instagram Продюсер (посилання)', cYoutube: 'YouTube (посилання)',
       cVimeo: 'Vimeo (посилання)', cFacebook: 'Facebook (посилання)',
@@ -139,8 +144,8 @@
       heroLeadUk: 'Опис під заголовком (укр)', heroLeadEn: 'Опис під заголовком (англ)',
       heroHint: 'У заголовку кожен новий рядок = перенос рядка на сайті.',
       catsScreenTitle: 'Категорії проєктів',
-      catsHint: 'По одній категорії в полі. Порожні ігноруються. Порядок тут = порядок на сайті (у hero й фільтрах).',
-      addCat: '+ Додати категорію', catPh: 'Напр.: Commercial', needCats: 'Додайте хоча б одну категорію.',
+      catsHint: 'По одній категорії в рядку. Ліве поле — назва укр (за нею фільтруються кейси, не змінюй в існуючих без потреби), праве — переклад англ (показується на eng.html; якщо порожнє — всюди лишається укр-назва). Порядок тут = порядок на сайті (у hero й фільтрах).',
+      addCat: '+ Додати категорію', catPh: 'Напр.: Реклама', catPhEn: 'Напр.: Advertising', needCats: 'Додайте хоча б одну категорію.',
       chooseServices: 'Секція «Що ми робимо»', chooseServicesSub: 'Заголовок і картки послуг',
       servicesScreenTitle: 'Секція «Що ми робимо»',
       svcEyebrowUk: 'Підпис секції (укр)', svcEyebrowEn: 'Підпис секції (англ)',
@@ -191,7 +196,9 @@
       addTitle: 'New case', editTitle: 'Edit case', listTitle: 'Choose a case',
       nameUk: 'Title (UA)', nameEn: 'Title (EN)', videoUrl: 'Video link (YouTube / Vimeo)',
       category: 'Category', year: 'Year', placement: 'Format / where it aired',
+      placementUk: 'Format / where it aired (UA)', placementEn: 'Format / where it aired (EN)',
       placementPh: 'e.g.: TV commercial, film, Reels…',
+      placementPhUk: 'e.g.: ТВ реклама, фільм, Reels…', placementPhEn: 'e.g.: TV commercial, film, Reels…',
       descUk: 'Project description (UA)', descEn: 'Project description (EN)',
       save: 'Save', saveEdit: 'Save changes', del: 'Delete', edit: 'Edit',
       back: '‹ Back', close: 'Close',
@@ -211,7 +218,8 @@
       chooseContacts: 'Edit contacts', chooseContactsSub: 'Phone, email, address, socials (footer & contact section)',
       aboutTitle: 'About us', aboutTextUk: 'Text (UA)', aboutTextEn: 'Text (EN)',
       contactsTitle: 'Contacts', cPhone: 'Phone (for tel: link)', cPhoneDisplay: 'Phone (displayed)',
-      cManager: 'Manager name', cEmail: 'Email', cAddrUk: 'Address (UA)', cAddrEn: 'Address (EN)',
+      cManager: 'Manager name', cManagerUk: 'Manager name (UA)', cManagerEn: 'Manager name (EN)',
+      cEmail: 'Email', cAddrUk: 'Address (UA)', cAddrEn: 'Address (EN)',
       cInstagram: 'Production Instagram (link)', cInstagramAgency: 'Agency Instagram (link)',
       cInstagramPerson: 'Producer Instagram (link)', cYoutube: 'YouTube (link)',
       cVimeo: 'Vimeo (link)', cFacebook: 'Facebook (link)',
@@ -235,8 +243,8 @@
       heroLeadUk: 'Description under title (UA)', heroLeadEn: 'Description under title (EN)',
       heroHint: 'In the title, each new line = a line break on the site.',
       catsScreenTitle: 'Project categories',
-      catsHint: 'One category per field. Empty ones are ignored. Order here = order on the site (hero & filters).',
-      addCat: '+ Add category', catPh: 'E.g.: Commercial', needCats: 'Add at least one category.',
+      catsHint: 'One category per row. Left field — UA name (this is what cases are filtered by, avoid changing existing ones), right — EN translation (shown on eng.html; empty = falls back to the UA name everywhere). Order here = order on the site (hero & filters).',
+      addCat: '+ Add category', catPh: 'E.g.: Реклама', catPhEn: 'E.g.: Advertising', needCats: 'Add at least one category.',
       chooseServices: '"What we do" section', chooseServicesSub: 'Heading and service cards',
       servicesScreenTitle: '"What we do" section',
       svcEyebrowUk: 'Section eyebrow (UA)', svcEyebrowEn: 'Section eyebrow (EN)',
@@ -722,11 +730,12 @@
           (rv && rv.provider === 'youtube' && isFileProto() ? '<span class="cc-vmodal__hint">' + esc(T.ytLocalHint) + '</span>' : '') +
         '</a>';
     }
-    document.getElementById('cc-vcat').textContent = item.category || '';
+    document.getElementById('cc-vcat').textContent = catLabel(item.category) || '';
     document.getElementById('cc-vtitle').textContent = title || '';
     var meta = [];
     if (item.year) meta.push(esc(item.year));
-    if (item.placement) meta.push(esc(item.placement));
+    var placementLabel = pick(item, 'placement', 'placement_en');
+    if (placementLabel) meta.push(esc(placementLabel));
     document.getElementById('cc-vmeta').innerHTML = meta.join(' · ');
     // Опис кейсу: якщо містить блоки «Задача/Рішення/Що зроблено» — структуруємо;
     // інакше показуємо як звичайний текст. У будь-якому разі #cc-vdesc містить повний опис.
@@ -834,9 +843,20 @@
   // порожні рядки, якщо підпис не заданий; порожній рядок НЕ вирізаємо, щоб
   // індекси лишались синхронними з parseReels()).
   function parseReelTitles(item) {
-    var raw = item.reel_titles;
-    if (raw === undefined || raw === null || raw === '') return [];
-    return String(raw).split('\n');
+    var rawUk = item.reel_titles;
+    var rawEn = item.reel_titles_en;
+    var listUk = (rawUk === undefined || rawUk === null || rawUk === '') ? [] : String(rawUk).split('\n');
+    var listEn = (rawEn === undefined || rawEn === null || rawEn === '') ? [] : String(rawEn).split('\n');
+    if (!listUk.length && !listEn.length) return [];
+    var max = Math.max(listUk.length, listEn.length);
+    var out = [];
+    for (var i = 0; i < max; i++) {
+      var en = (listEn[i] || '').trim();
+      var uk = (listUk[i] || '').trim();
+      // На eng.html — переклад, якщо є; інакше фолбек на укр (як і скрізь на сайті).
+      out.push((LANG === 'en' && en) ? en : uk);
+    }
+    return out;
   }
   // Рендер сітки роликів (2 колонки, як у ТЗ). Клік по ролику відкриває його у плеєрі.
   function renderReels(item, player) {
@@ -1371,36 +1391,44 @@
         '</div>' +
       '</form>';
     var list = (CATEGORIES && CATEGORIES.length) ? CATEGORIES.slice() : [''];
-    list.forEach(function (c) { addCatRow(c); });
-    document.getElementById('cc-addcat').addEventListener('click', function () { addCatRow(''); focusLastCat(); });
+    list.forEach(function (c) { addCatRow(c, CATEGORY_EN[c] || ''); });
+    document.getElementById('cc-addcat').addEventListener('click', function () { addCatRow('', ''); focusLastCat(); });
     document.getElementById('cc-cats-form').addEventListener('submit', function (e) {
       e.preventDefault();
-      var vals = Array.prototype.slice.call(document.querySelectorAll('#cc-cats .cc-catinput'))
-        .map(function (el) { return el.value.trim(); }).filter(Boolean);
-      // прибираємо дублікати (без урахування регістру), зберігаємо порядок
-      var seen = {}, out = [];
-      vals.forEach(function (v) { var k = v.toLowerCase(); if (!seen[k]) { seen[k] = true; out.push(v); } });
+      var rows = Array.prototype.slice.call(document.querySelectorAll('#cc-cats .cc-catrow'));
+      // прибираємо дублікати за укр-назвою (без урахування регістру), зберігаємо порядок;
+      // англ-переклад лишається вирівняним по індексу з укр-списком.
+      var seen = {}, out = [], outEn = [];
+      rows.forEach(function (row) {
+        var v = row.querySelector('.cc-catinput').value.trim();
+        var vEn = row.querySelector('.cc-catinput-en').value.trim();
+        if (!v) return;
+        var k = v.toLowerCase();
+        if (!seen[k]) { seen[k] = true; out.push(v); outEn.push(vEn); }
+      });
       if (!out.length) { setStatus(T.needCats, 'err'); return; }
       setStatus(T.saving, 'load');
       var btn = document.getElementById('cc-cats-submit'); if (btn) btn.disabled = true;
-      jsonp({ action: 'update_categories', categories: out.join('\n') }).then(function (res) {
+      jsonp({ action: 'update_categories', categories: out.join('\n'), categories_en: outEn.join('\n') }).then(function (res) {
         if (btn) btn.disabled = false;
         if (res && res.ok) {
           setStatus(T.settingsSaved, 'ok');
           CATEGORIES = (res.categories && res.categories.length) ? res.categories.slice() : out;
+          CATEGORY_EN = res.categories_en || (function () { var m = {}; out.forEach(function (c, i) { m[c] = outEn[i] || ''; }); return m; })();
           renderFilters(); renderCases(); renderHeroList();
           syncSiteCache();
         } else setStatus((res && res.error) ? res.error : T.loadErr, 'err');
       }).catch(function () { if (btn) btn.disabled = false; setStatus(T.loadErr, 'err'); });
     });
   }
-  function addCatRow(val) {
+  function addCatRow(val, valEn) {
     var box = document.getElementById('cc-cats');
     if (!box) return;
     var row = document.createElement('div');
     row.className = 'cc-catrow';
     row.innerHTML =
       '<input type="text" class="cc-catinput" value="' + esc(val || '') + '" placeholder="' + esc(T.catPh) + '">' +
+      '<input type="text" class="cc-catinput-en" value="' + esc(valEn || '') + '" placeholder="' + esc(T.catPhEn) + '">' +
       '<button type="button" class="cc-vrow__del" title="' + esc(T.del) + '">&times;</button>';
     row.querySelector('.cc-vrow__del').addEventListener('click', function () { row.parentNode.removeChild(row); });
     box.appendChild(row);
@@ -1591,7 +1619,8 @@
         '<div class="cc-grid">' +
           inp('phone', T.cPhone, g('phone'), false, 'half', '+380...') +
           inp('phone_display', T.cPhoneDisplay, g('phone_display'), false, 'half', '+38 0..') +
-          inp('manager', T.cManager, g('manager'), false, 'half') +
+          inp('manager', T.cManagerUk, g('manager'), false, 'half') +
+          inp('manager_en', T.cManagerEn, g('manager_en'), false, 'half') +
           inp('manager_telegram', T.cManagerTelegram, g('manager_telegram'), false, 'half') +
           inp('email', T.cEmail, g('email'), false, 'half') +
           inp('address_uk', T.cAddrUk, g('address_uk'), false, 'full') +
@@ -1608,7 +1637,7 @@
           '<span class="cc-status" id="cc-status"></span>' +
         '</div>' +
       '</form>';
-    var keys = ['phone', 'phone_display', 'manager', 'manager_telegram', 'email', 'address_uk', 'address_en',
+    var keys = ['phone', 'phone_display', 'manager', 'manager_en', 'manager_telegram', 'email', 'address_uk', 'address_en',
                 'instagram', 'instagram_agency', 'instagram_person', 'youtube', 'vimeo', 'facebook'];
     document.getElementById('cc-contacts-form').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -1866,7 +1895,8 @@
               : '<input type="text" name="category" value="' + esc(g('category')) + '" placeholder="Commercial" />') +
           '</div>' +
           inp('year', T.year, g('year'), false, 'half', '2024') +
-          inp('placement', T.placement, g('placement'), false, 'full', T.placementPh) +
+          inp('placement', T.placementUk, g('placement'), false, 'half', T.placementPhUk) +
+          inp('placement_en', T.placementEn, g('placement_en'), false, 'half', T.placementPhEn) +
           area('desc_uk', T.descUk, g('desc_uk'), 'half') +
           area('desc_en', T.descEn, g('desc_en'), 'half') +
           '<div class="cc-field cc-field--full"><div class="cc-vhint">' + esc(T.descHint) + '</div></div>' +
@@ -1880,7 +1910,7 @@
 
     // початковий список URL відео для форми
     initVideoRows(collectInitialVideos(it));
-    document.getElementById('cc-addvid').addEventListener('click', function () { addVideoRow(''); });
+    document.getElementById('cc-addvid').addEventListener('click', function () { addVideoRow('', '', ''); });
 
     var form = document.getElementById('cc-form');
     form.addEventListener('submit', function (e) { e.preventDefault(); doSave(form); });
@@ -1891,30 +1921,33 @@
   // Збираємо початкові відео кейсу (URL + підпис): спочатку reels/reel_titles
   // (усі відео, з їхніми підписами по тому ж індексу), інакше — головне відео.
   function collectInitialVideos(it) {
-    if (!it) return [{ url: '', caption: '' }];
+    if (!it) return [{ url: '', caption: '', captionEn: '' }];
     var urls = [];
     var caps = [];
+    var capsEn = [];
     if (it.reels) {
       urls = String(it.reels).split(/[\n,]+/).map(function (s) { return s.trim(); }).filter(Boolean);
       var rawCaps = (it.reel_titles !== undefined && it.reel_titles !== null) ? String(it.reel_titles).split('\n') : [];
+      var rawCapsEn = (it.reel_titles_en !== undefined && it.reel_titles_en !== null) ? String(it.reel_titles_en).split('\n') : [];
       caps = urls.map(function (_, i) { return (rawCaps[i] || '').trim(); });
+      capsEn = urls.map(function (_, i) { return (rawCapsEn[i] || '').trim(); });
     }
     if (it.video_url) {
       // головне відео має бути першим і не дублюватися
       var mainV = parseVideo(it.video_url);
       var exists = urls.some(function (u) { var v = parseVideo(u); return v && mainV && v.id === mainV.id; });
-      if (!exists) { urls.unshift(it.video_url); caps.unshift(''); }
+      if (!exists) { urls.unshift(it.video_url); caps.unshift(''); capsEn.unshift(''); }
     }
-    if (!urls.length) return [{ url: '', caption: '' }];
-    return urls.map(function (u, i) { return { url: u, caption: caps[i] || '' }; });
+    if (!urls.length) return [{ url: '', caption: '', captionEn: '' }];
+    return urls.map(function (u, i) { return { url: u, caption: caps[i] || '', captionEn: capsEn[i] || '' }; });
   }
   function initVideoRows(items) {
     var box = document.getElementById('cc-videos');
     if (box) box.innerHTML = '';
-    (items && items.length ? items : [{ url: '', caption: '' }]).forEach(function (it) { addVideoRow(it.url, it.caption); });
+    (items && items.length ? items : [{ url: '', caption: '', captionEn: '' }]).forEach(function (it) { addVideoRow(it.url, it.caption, it.captionEn); });
     updateVideoRowsUI();
   }
-  function addVideoRow(url, caption) {
+  function addVideoRow(url, caption, captionEn) {
     var box = document.getElementById('cc-videos');
     if (!box) return;
     var row = document.createElement('div');
@@ -1923,7 +1956,10 @@
       '<span class="cc-vrow__thumb"><img alt=""></span>' +
       '<div class="cc-vrow__main">' +
         '<input type="text" class="cc-vinput" value="' + esc(url || '') + '" placeholder="https://youtu.be/…  ·  https://vimeo.com/…">' +
-        '<input type="text" class="cc-vcaption" value="' + esc(caption || '') + '" placeholder="' + esc(T.reelCaptionPh) + '">' +
+        '<div class="cc-vcaption-row">' +
+          '<input type="text" class="cc-vcaption cc-vcaption-uk" value="' + esc(caption || '') + '" placeholder="' + esc(T.reelCaptionPhUk) + '">' +
+          '<input type="text" class="cc-vcaption cc-vcaption-en" value="' + esc(captionEn || '') + '" placeholder="' + esc(T.reelCaptionPhEn) + '">' +
+        '</div>' +
         '<span class="cc-vrow__meta"></span>' +
       '</div>' +
       '<button type="button" class="cc-vrow__del" title="' + esc(T.del) + '">&times;</button>';
@@ -1964,8 +2000,13 @@
     return Array.prototype.slice.call(document.querySelectorAll('#cc-videos .cc-vrow'))
       .map(function (row) {
         var uEl = row.querySelector('.cc-vinput');
-        var cEl = row.querySelector('.cc-vcaption');
-        return { url: uEl ? uEl.value.trim() : '', caption: cEl ? cEl.value.trim() : '' };
+        var cEl = row.querySelector('.cc-vcaption-uk');
+        var cEnEl = row.querySelector('.cc-vcaption-en');
+        return {
+          url: uEl ? uEl.value.trim() : '',
+          caption: cEl ? cEl.value.trim() : '',
+          captionEn: cEnEl ? cEnEl.value.trim() : ''
+        };
       })
       .filter(function (r) { return r.url; });
   }
@@ -1990,7 +2031,7 @@
   /* ---------------- Дії ---------------- */
   function doSave(form) {
     var d = {};
-    ['name_uk', 'name_en', 'category', 'year', 'placement', 'desc_uk', 'desc_en'].forEach(function (k) {
+    ['name_uk', 'name_en', 'category', 'year', 'placement', 'placement_en', 'desc_uk', 'desc_en'].forEach(function (k) {
       var el = form.elements[k]; d[k] = el ? el.value.trim() : '';
     });
     if (!d.name_uk) { setStatus(T.needName, 'err'); return; }
@@ -2011,6 +2052,7 @@
     // працюють однаково.
     d.reels = rows.map(function (r) { return r.url; }).join('\n');
     d.reel_titles = rows.map(function (r) { return r.caption; }).join('\n');
+    d.reel_titles_en = rows.map(function (r) { return r.captionEn; }).join('\n');
 
     setStatus(T.saving, 'load');
     var btn = document.getElementById('cc-submit');
@@ -2024,8 +2066,9 @@
         action: editingId ? 'update' : 'add',
         name_uk: d.name_uk, name_en: d.name_en, video_url: main.url,
         provider: v.provider, video_id: v.id, thumb: thumb || '',
-        category: d.category, year: d.year, placement: d.placement,
-        desc_uk: d.desc_uk, desc_en: d.desc_en, reels: d.reels, reel_titles: d.reel_titles
+        category: d.category, year: d.year, placement: d.placement, placement_en: d.placement_en,
+        desc_uk: d.desc_uk, desc_en: d.desc_en, reels: d.reels, reel_titles: d.reel_titles,
+        reel_titles_en: d.reel_titles_en
       };
       if (editingId) params.id = editingId;
       function unlock() { var b = document.getElementById('cc-submit'); if (b) b.disabled = false; }
@@ -2068,9 +2111,11 @@
     var rec = {
       id: id, name_uk: params.name_uk, name_en: params.name_en,
       category: params.category, year: params.year, placement: params.placement,
+      placement_en: params.placement_en,
       provider: params.provider, video_id: params.video_id, video_url: params.video_url,
       thumb: thumb || params.thumb || '', desc_uk: params.desc_uk, desc_en: params.desc_en,
-      reels: params.reels || '', reel_titles: params.reel_titles || ''
+      reels: params.reels || '', reel_titles: params.reel_titles || '',
+      reel_titles_en: params.reel_titles_en || ''
     };
     var idx = -1;
     for (var i = 0; i < ALL.length; i++) if (String(ALL[i].id) === String(id)) { idx = i; break; }
@@ -2126,6 +2171,7 @@
       contacts: SITE_CONTACTS,
       hero: SITE_HERO,
       categories: CATEGORIES,
+      categories_en: CATEGORY_EN,
       services: SITE_SERVICES,
       cases: ALL,
       order: { home: HOME_ORDER, all: CASES_ORDER }
@@ -2137,6 +2183,7 @@
     if (res.contacts) { SITE_CONTACTS = res.contacts; applyContactsToPage(); }
     if (res.hero) { SITE_HERO = res.hero; applyHeroToPage(); applyServicesHead(); }
     if (res.categories && res.categories.length) CATEGORIES = res.categories.slice();
+    if (res.categories_en) CATEGORY_EN = res.categories_en;
     if (res.services && res.services.length) { SITE_SERVICES = res.services.slice(); renderServicesCards(); }
     if (res.order) {
       HOME_ORDER = Array.isArray(res.order.home) ? res.order.home.slice() : [];
@@ -2208,8 +2255,9 @@
     ul.innerHTML = list.map(function (c, i) {
       var num = (i + 1 < 10 ? '0' : '') + (i + 1);
       // Hero є лише на головній — ведемо на повне портфоліо, відфільтроване по категорії.
+      // href лишається з укр-назвою (це ключ фільтра), а показуємо — перекладену мітку.
       var href = viewAllHref() + '?cat=' + encodeURIComponent(c) + '#work';
-      return '<li><a href="' + esc(href) + '"><span>' + esc(c) +
+      return '<li><a href="' + esc(href) + '"><span>' + esc(catLabel(c)) +
         '</span><span class="num">' + num + '</span></a></li>';
     }).join('');
   }
@@ -2309,11 +2357,12 @@
     var c = SITE_CONTACTS;
     if (!c) return;
     var addr = (LANG === 'en' && c.address_en) ? c.address_en : c.address_uk;
+    var managerName = (LANG === 'en' && c.manager_en) ? c.manager_en : c.manager;
     function setText(id, val) { var e = document.getElementById(id); if (e && val) e.textContent = val; }
     function setHref(id, val, prefix) { var e = document.getElementById(id); if (e && val) e.setAttribute('href', (prefix || '') + val); }
     // Блок «Контакти» (легасі, приховано на сторінках — лишено для сумісності)
     setHref('cx-contact-phone', c.phone, 'tel:'); setText('cx-contact-phone', c.phone_display || c.phone);
-    setText('cx-contact-manager', c.manager);
+    setText('cx-contact-manager', managerName);
     setSocialRow('cx-contact-manager-telegram', null, c.manager_telegram, tgHandle);
     setHref('cx-contact-email', c.email, 'mailto:'); setText('cx-contact-email', c.email);
     setText('cx-contact-address', addr);
@@ -2323,7 +2372,7 @@
     // Футер
     setHref('cx-footer-phone', c.phone, 'tel:'); setText('cx-footer-phone', c.phone_display || c.phone);
     setSocialRow('cx-footer-manager-telegram', 'cx-footer-manager-telegram-handle', c.manager_telegram, tgHandle);
-    setText('cx-footer-manager', c.manager);
+    setText('cx-footer-manager', managerName);
     setHref('cx-footer-email', c.email, 'mailto:'); setText('cx-footer-email', c.email);
     setText('cx-footer-address1', addr);
     setSocialRow('cx-footer-s-instagram-person', 'cx-footer-s-instagram-person-handle', c.instagram_person, igHandle);
@@ -2366,8 +2415,12 @@
     return '<button type="button" class="cc-filter' + (activeFilter === v ? ' cc-active' : '') +
       '" data-f="' + esc(v) + '">' + esc(l) + '</button>';
   }
-  // Категорії лишаються англійськими (як у референсі) в обох мовах.
-  function catLabel(c) { return c; }
+  // На eng.html показуємо переклад категорії, якщо адмін його задав; інакше —
+  // укр-назва як і раніше (щоб нічого не «зникало», якщо переклад не заповнили).
+  function catLabel(c) {
+    if (LANG === 'en') { var en = CATEGORY_EN[c]; if (en) return en; }
+    return c;
+  }
   function renderCases() {
     var box = document.getElementById('cc-cases');
     var items;
@@ -2403,7 +2456,7 @@
           '<div class="cc-ov"><div class="cc-ov__box">' +
             '<span class="cc-ov__title">' + esc(title || '') + '</span>' +
             (i.year ? '<span class="cc-ov__year">' + esc(i.year) + '</span>' : '') +
-            (i.placement ? '<span class="cc-ov__place">' + esc(i.placement) + '</span>' : '') +
+            (pick(i, 'placement', 'placement_en') ? '<span class="cc-ov__place">' + esc(pick(i, 'placement', 'placement_en')) + '</span>' : '') +
           '</div></div>' +
         '</div>' +
         '<div class="cc-foot">' +

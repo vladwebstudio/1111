@@ -322,6 +322,10 @@
 .cc-vrow__main input { background: transparent; border: 0; border-bottom: 1px solid #262626; color: #f2f2f2; font-family: inherit; font-size: 14px; padding: 6px 0; outline: none; transition: border-color .2s; }
 .cc-vrow__main input:focus { border-bottom-color: #e0201f; }
 .cc-vrow__main input.cc-vcaption { font-size: 12px; color: #b8b8b8; }
+/* Підпис ролика — 2 поля в один рядок (укр зліва, англ справа), той самий
+   довгий рядок просто ділиться навпіл замість одного суцільного поля. */
+.cc-vcaption-row { display: flex; gap: 10px; }
+.cc-vcaption-row .cc-vcaption { flex: 1 1 0; min-width: 0; }
 .cc-vrow__meta { color: #7a7a7a; font-size: 11px; }
 .cc-vrow__meta b { color: #ccc; }
 .cc-vrow__del { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: transparent; border: 1px solid #333; color: #aaa; font-size: 20px; line-height: 1; cursor: pointer; transition: all .2s; }
@@ -332,9 +336,11 @@
 /* ---- Список категорій у адмінці (додати/змінити/видалити) ---- */
 .cc-cats { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
 .cc-catrow { display: flex; align-items: center; gap: 12px; }
-.cc-catinput { flex: 1 1 auto; min-width: 0; background: #0b0b0b; border: 1px solid #2b2b2b; color: #f2f2f2;
+.cc-catinput, .cc-catinput-en { flex: 1 1 0; min-width: 0; background: #0b0b0b; border: 1px solid #2b2b2b; color: #f2f2f2;
   padding: 12px 14px; font-size: 14px; border-radius: 2px; outline: none; transition: border-color .2s; font-family: inherit; }
-.cc-catinput:focus { border-color: #e0201f; }
+.cc-catinput:focus, .cc-catinput-en:focus { border-color: #e0201f; }
+.cc-catinput-en { color: #9a9a9a; }
+@media (max-width: 560px) { .cc-catrow { flex-wrap: wrap; } .cc-catrow .cc-vrow__del { margin-left: auto; } }
 
 /* ---- Картки послуг у адмінці «Що ми робимо» ---- */
 .cc-svc-list { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
