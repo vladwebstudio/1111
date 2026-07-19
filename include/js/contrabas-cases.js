@@ -2380,7 +2380,13 @@
         ? homeItems().slice(0, LIMIT)
         : ALL.filter(function (i) { return i.category === activeFilter; }).slice(0, LIMIT);
     } else {
-      items = shown().filter(function (i) { return activeFilter === 'all' || i.category === activeFilter; });
+      // Сторінка «Всі кейси»: вкладка «Всі» — ручне сортування (shown()/
+      // orderedAll()), як і задумано (нове дописується в кінець). Конкретна
+      // категорія — НЕ ручний порядок, а звичайна свіжість (нове зверху,
+      // старе знизу) — так само, як і на головній.
+      items = activeFilter === 'all'
+        ? shown()
+        : ALL.filter(function (i) { return i.category === activeFilter; });
     }
     if (!items.length) { box.innerHTML = '<div class="cc-empty">' + T.empty + '</div>'; return; }
     box.innerHTML = items.map(function (i, idx) {
